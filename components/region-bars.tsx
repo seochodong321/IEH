@@ -1,0 +1,29 @@
+import { DISTRICTS } from "@/lib/constants";
+import { regionTier } from "@/lib/region";
+import { cn } from "@/lib/utils";
+import type { District } from "@/lib/types";
+
+export function RegionBars({ counts }: { counts: Record<District, number> }) {
+  const rows = DISTRICTS.map((d) => ({
+    label: d.label,
+    count: counts[d.value] ?? 0,
+  })).sort((a, b) => b.count - a.count);
+  const max = Math.max(1, ...rows.map((r) => r.count));
+
+  return (
+    <ul className="space-y-2">
+      {rows.map((r) => (
+        <li key={r.label} className="flex items-center gap-2 text-sm">
+          <span className="w-16 shrink-0 text-muted-foreground">{r.label}</span>
+          <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn("h-full rounded-full", regionTier(r.count).fill)}
+              style={{ width: `${(r.count / max) * 100}%` }}
+            />
+          </div>
+          <span className="w-7 shrink-0 text-right tabular-nums">{r.count}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
