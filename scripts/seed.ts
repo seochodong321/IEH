@@ -1,6 +1,7 @@
 // Neon(Postgres)에 샘플 행사 데이터를 적재한다.
 // 사용: 스키마 생성(npm run db:push) 후 → npm run db:seed
-import "dotenv/config";
+import { config } from "dotenv";
+config({ path: [".env.local", ".env"] });
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { events, submissions } from "../lib/db/schema";
