@@ -2,46 +2,121 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { DISTRICTS } from "@/lib/constants";
-import { regionTier } from "@/lib/region";
-import { cn } from "@/lib/utils";
+import { DISTRICT_MAP } from "@/lib/constants";
 import type { District } from "@/lib/types";
 
-// 인천 약식 실루엣 (viewBox 0~100). 바다 위에 강화도·영종도·본토(송도 반도)·옹진 섬.
-// 정밀 경계가 아니라 "한눈에 인천"으로 읽히게 한 형태 + 권역 카운트 버블.
+// 인천 2군 9구 약식 지도. 공식 행정구역도를 참고해 손으로 근사 트레이스한 폴리곤.
+// viewBox 0 0 760 880 (참고 이미지 비율). 정밀 GIS 아님 — 좌표는 미세조정 가능.
 
-// 본토 해안선 (시계방향) — 북부, 동측 돌출(계양·부평), 송도 반도(남측 돌출), 서해안 만입
-const MAINLAND =
-  "34,13 52,11 64,13 74,18 84,28 86,42 82,54 76,66 66,73 56,80 50,87 43,82 40,73 33,67 29,59 27,50 31,42 26,34 29,25 31,18";
+interface Shape {
+  value: District;
+  points: string;
+  lx: number; // 라벨 중심 x
+  ly: number; // 라벨 중심 y
+  fs: number; // 라벨 글자 크기
+}
 
-const GANGHWA = "6,5 18,3 26,8 27,15 20,20 10,18 5,11"; // 강화도 (북서 큰 섬)
-const YEONGJONG = "3,38 14,35 21,41 22,50 16,56 6,53 2,45"; // 영종도 (서측 섬, 공항)
-
-const ONGJIN_ISLES = [
-  { cx: 14, cy: 70, r: 2.2 },
-  { cx: 9, cy: 77, r: 1.6 },
-  { cx: 18, cy: 82, r: 2 },
-  { cx: 24, cy: 87, r: 1.4 },
-  { cx: 10, cy: 85, r: 1.3 },
+const SHAPES: Shape[] = [
+  {
+    value: "ganghwa",
+    points:
+      "175,60 350,40 435,70 420,230 405,355 300,388 205,360 188,300 218,275 135,235 165,150 190,95",
+    lx: 285,
+    ly: 205,
+    fs: 22,
+  },
+  {
+    value: "yeongjong",
+    points:
+      "190,500 320,488 440,505 466,560 430,635 330,660 250,690 196,756 178,700 196,640 180,580",
+    lx: 292,
+    ly: 575,
+    fs: 22,
+  },
+  {
+    value: "geomdan",
+    points: "425,258 500,248 575,260 608,300 575,375 490,388 435,360 425,300",
+    lx: 508,
+    ly: 320,
+    fs: 20,
+  },
+  {
+    value: "seo",
+    points: "435,400 565,398 600,430 580,520 520,540 465,525 432,475 418,438",
+    lx: 516,
+    ly: 462,
+    fs: 20,
+  },
+  {
+    value: "gyeyang",
+    points: "602,368 670,360 715,388 705,455 650,468 600,448",
+    lx: 657,
+    ly: 412,
+    fs: 16,
+  },
+  {
+    value: "bupyeong",
+    points: "598,476 660,472 705,490 698,548 640,565 595,535",
+    lx: 648,
+    ly: 520,
+    fs: 16,
+  },
+  {
+    value: "jemulpo",
+    points: "442,560 500,556 512,592 482,620 446,606 432,582",
+    lx: 470,
+    ly: 590,
+    fs: 13,
+  },
+  {
+    value: "michuhol",
+    points: "512,588 580,582 600,615 580,660 525,662 502,622",
+    lx: 548,
+    ly: 626,
+    fs: 14,
+  },
+  {
+    value: "namdong",
+    points: "602,558 690,560 712,610 700,665 650,705 602,668 596,608",
+    lx: 652,
+    ly: 632,
+    fs: 16,
+  },
+  {
+    value: "yeonsu",
+    points:
+      "452,628 560,638 605,672 608,735 572,800 505,832 458,800 442,725 448,668",
+    lx: 534,
+    ly: 722,
+    fs: 20,
+  },
+  {
+    value: "ongjin",
+    points: "55,432 100,424 122,452 100,480 60,472 45,452",
+    lx: 110,
+    ly: 410,
+    fs: 18,
+  },
 ];
 
-// 버블 위치 (본토/섬 위에)
-const POS: Record<District, { x: number; y: number }> = {
-  ganghwa: { x: 15, y: 11 }, // 강화군
-  yeongjong: { x: 12, y: 46 }, // 영종구
-  seo: { x: 33, y: 33 }, // 서해구
-  geomdan: { x: 47, y: 18 }, // 검단구
-  gyeyang: { x: 70, y: 24 }, // 계양구
-  bupyeong: { x: 76, y: 46 }, // 부평구
-  jemulpo: { x: 37, y: 58 }, // 제물포구
-  michuhol: { x: 54, y: 55 }, // 미추홀구
-  namdong: { x: 72, y: 62 }, // 남동구
-  yeonsu: { x: 50, y: 77 }, // 연수구(송도)
-  ongjin: { x: 16, y: 79 }, // 옹진군
-};
+// 옹진군 부속 섬 (장식 — 클릭은 위 main 폴리곤/라벨)
+const ONGJIN_DOTS = [
+  { cx: 138, cy: 462, r: 10 },
+  { cx: 158, cy: 500, r: 8 },
+  { cx: 46, cy: 498, r: 8 },
+  { cx: 112, cy: 510, r: 6 },
+];
 
-const LAND = "#dcefe1";
-const COAST = "#8fc4ab";
+function tierFill(count: number): string {
+  if (count >= 10) return "#fecdd3"; // rose-200
+  if (count >= 5) return "#fed7aa"; // orange-200
+  if (count >= 2) return "#fde68a"; // amber-200
+  return "#e2e8f0"; // slate-200
+}
+
+const HOVER_FILL = "#bfdbfe"; // blue-200
+const HOVER_STROKE = "#2563eb"; // blue-600
+const BASE_STROKE = "#94a3b8"; // slate-400
 
 export function RegionMap({
   counts,
@@ -60,102 +135,74 @@ export function RegionMap({
   return (
     <div
       className="relative w-full overflow-hidden rounded-lg bg-sky-50 ring-1 ring-sky-100"
-      style={{ aspectRatio: "1 / 1" }}
+      style={{ aspectRatio: "760 / 880" }}
     >
       <svg
-        viewBox="0 0 100 100"
+        viewBox="0 0 760 880"
         preserveAspectRatio="xMidYMid meet"
         className="absolute inset-0 size-full"
       >
-        {/* 바다 잔물결 느낌의 옅은 라인 (장식) */}
-        <text
-          x="78"
-          y="92"
-          fontSize="4"
-          fill="#9cc3e0"
-          fontWeight="600"
-        >
+        <text x="690" y="845" fontSize="26" fill="#9cc3e0" fontWeight="700">
           서해
         </text>
 
-        {/* 육지 */}
-        <polygon
-          points={MAINLAND}
-          fill={LAND}
-          stroke={COAST}
-          strokeWidth="0.9"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points={GANGHWA}
-          fill={LAND}
-          stroke={COAST}
-          strokeWidth="0.9"
-          strokeLinejoin="round"
-        />
-        <polygon
-          points={YEONGJONG}
-          fill={LAND}
-          stroke={COAST}
-          strokeWidth="0.9"
-          strokeLinejoin="round"
-        />
-        {ONGJIN_ISLES.map((i, idx) => (
+        {ONGJIN_DOTS.map((d, i) => (
           <circle
-            key={idx}
-            cx={i.cx}
-            cy={i.cy}
-            r={i.r}
-            fill={LAND}
-            stroke={COAST}
-            strokeWidth="0.6"
+            key={i}
+            cx={d.cx}
+            cy={d.cy}
+            r={d.r}
+            fill={tierFill(counts.ongjin ?? 0)}
+            stroke={BASE_STROKE}
+            strokeWidth="1.5"
           />
         ))}
-      </svg>
 
-      {/* 권역 카운트 버블 (클릭/호버) */}
-      {DISTRICTS.map((d) => {
-        const count = counts[d.value] ?? 0;
-        const pos = POS[d.value];
-        const size = 20 + Math.min(count, 12) * 2;
-        const on = hovered === d.value || selected === d.value;
-        return (
-          <button
-            key={d.value}
-            type="button"
-            onClick={() => handle(d.value)}
-            onMouseEnter={() => setHovered(d.value)}
-            onMouseLeave={() => setHovered(null)}
-            title={`${d.label} ${count}건`}
-            aria-label={`${d.label} ${count}건`}
-            className="absolute z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-            style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-          >
-            <span
-              className={cn(
-                "flex items-center justify-center rounded-full font-bold text-white shadow ring-2 transition-transform",
-                on ? "scale-110 ring-blue-400" : "ring-white/90",
-                regionTier(count).fill,
-              )}
-              style={{
-                width: size,
-                height: size,
-                fontSize: Math.round(size * 0.42),
-              }}
+        {SHAPES.map((s) => {
+          const count = counts[s.value] ?? 0;
+          const on = hovered === s.value || selected === s.value;
+          return (
+            <g
+              key={s.value}
+              className="cursor-pointer"
+              onMouseEnter={() => setHovered(s.value)}
+              onMouseLeave={() => setHovered(null)}
+              onClick={() => handle(s.value)}
             >
-              {count}
-            </span>
-            <span
-              className={cn(
-                "mt-0.5 rounded bg-white/85 px-1 text-[9px] leading-tight font-medium",
-                on ? "text-foreground" : "text-slate-600",
-              )}
-            >
-              {d.label}
-            </span>
-          </button>
-        );
-      })}
+              <polygon
+                points={s.points}
+                className="transition-colors"
+                fill={on ? HOVER_FILL : tierFill(count)}
+                stroke={on ? HOVER_STROKE : BASE_STROKE}
+                strokeWidth={on ? 3 : 1.5}
+                strokeLinejoin="round"
+              />
+              <text
+                x={s.lx}
+                y={s.ly}
+                textAnchor="middle"
+                fontSize={s.fs}
+                fontWeight="700"
+                fill="#1e293b"
+                className="pointer-events-none select-none"
+              >
+                {DISTRICT_MAP[s.value].label}
+              </text>
+              <text
+                x={s.lx}
+                y={s.ly + s.fs + 3}
+                textAnchor="middle"
+                fontSize={s.fs * 0.82}
+                fontWeight="600"
+                fill="#64748b"
+                className="pointer-events-none select-none"
+              >
+                {count}건
+              </text>
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }
