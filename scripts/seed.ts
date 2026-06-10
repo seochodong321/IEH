@@ -19,26 +19,35 @@ async function main() {
 
   let inserted = 0;
   for (const e of seedEvents) {
+    const values = {
+      id: e.id,
+      title: e.title,
+      category: e.category,
+      startDate: e.startDate,
+      endDate: e.endDate,
+      recurrenceType: e.recurrenceType,
+      recurrenceDays: e.recurrenceDays,
+      venue: e.venue,
+      district: e.district,
+      organizer: e.organizer,
+      host: e.host,
+      indoorOutdoor: e.indoorOutdoor,
+      description: e.description,
+      websiteUrl: e.websiteUrl,
+      attachmentUrl: e.attachmentUrl,
+      imageUrl: e.imageUrl,
+      isFeatured: e.isFeatured,
+      likes: e.likes,
+      createdAt: new Date(e.createdAt),
+      updatedAt: new Date(e.updatedAt),
+    };
+    // 이미 있으면 갱신(upsert) — 새 컬럼 백필 + 시드 상태로 정렬.
+    // ⚠️ likes도 시드값으로 덮어쓰므로, 실제 좋아요가 쌓인 뒤에는 재시드 주의.
+    const { id: _id, ...updateSet } = values;
     const res = await db
       .insert(events)
-      .values({
-        id: e.id,
-        title: e.title,
-        category: e.category,
-        startDate: e.startDate,
-        endDate: e.endDate,
-        venue: e.venue,
-        district: e.district,
-        organizer: e.organizer,
-        host: e.host,
-        indoorOutdoor: e.indoorOutdoor,
-        description: e.description,
-        websiteUrl: e.websiteUrl,
-        attachmentUrl: e.attachmentUrl,
-        createdAt: new Date(e.createdAt),
-        updatedAt: new Date(e.updatedAt),
-      })
-      .onConflictDoNothing({ target: events.id })
+      .values(values)
+      .onConflictDoUpdate({ target: events.id, set: updateSet })
       .returning({ id: events.id });
     inserted += res.length;
   }
@@ -70,7 +79,7 @@ async function main() {
   }
 
   console.log(
-    `시드 완료: 행사 ${inserted}/${seedEvents.length}건, 제보 ${subInserted}/${seedSubmissions.length}건 신규 삽입 (중복은 건너뜀).`,
+    `시드 완료: 행사 ${inserted}/${seedEvents.length}건 적재(upsert), 제보 ${subInserted}/${seedSubmissions.length}건 신규.`,
   );
 }
 

@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Building2,
   CalendarDays,
+  CalendarPlus,
   ExternalLink,
   Home,
   MapPin,
@@ -17,6 +18,8 @@ import { CategoryBadge, StatusBadge } from "@/components/event-badges";
 import { EventThumb } from "@/components/event-thumb";
 import { ShareButton } from "@/components/share-button";
 import { LikeButton } from "@/components/like-button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { getEventById } from "@/lib/data/events";
 import {
   DISTRICT_MAP,
@@ -62,6 +65,13 @@ export default async function EventDetailPage({
         </Link>
         <div className="flex items-center gap-2">
           <LikeButton eventId={event.id} initialLikes={event.likes} />
+          <a
+            href={`/events/${event.id}/ics`}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            <CalendarPlus className="size-4" />
+            캘린더 추가
+          </a>
           <ShareButton />
         </div>
       </div>
