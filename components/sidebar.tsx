@@ -26,7 +26,7 @@ const NAV: NavItem[] = [
   { href: "/events", label: "행사 목록", icon: ListChecks },
   { href: "/calendar", label: "캘린더", icon: CalendarDays },
   { href: "/report", label: "제보하기", icon: Megaphone },
-  { href: "/map", label: "지도 보기", icon: MapPin, soon: true },
+  { href: "/map", label: "지도 보기", icon: MapPin },
   { href: "/stats", label: "통계 현황", icon: BarChart3 },
 ];
 

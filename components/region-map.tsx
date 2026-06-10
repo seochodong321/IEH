@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import type { District } from "@/lib/types";
 
 // 인천 2군 9구의 대략적 지리 위치 (0~100 좌표, x=서→동, y=북→남).
-// 정밀 경계 대신 시안처럼 권역 위치에 버블을 얹는 약식 분포도.
 const POS: Record<District, { x: number; y: number }> = {
   ganghwa: { x: 16, y: 11 },
   geomdan: { x: 43, y: 19 },
@@ -23,7 +22,6 @@ const POS: Record<District, { x: number; y: number }> = {
   ongjin: { x: 24, y: 84 },
 };
 
-// 약식 경계선용 폴리곤
 const CELLS: { value: District; points: string }[] = [
   { value: "geomdan", points: "31,13 54,12 56,20 50,27 33,26 29,18" },
   { value: "gyeyang", points: "58,15 80,17 82,26 74,30 59,28 56,20" },
@@ -44,22 +42,31 @@ const ONGJIN_ISLES = [
   { cx: 18, cy: 89, r: 1.6 },
 ];
 
-// 건수 구간별 셀 음영(연한 색) — 많을수록 따뜻한 색
 function tierCellFill(count: number): string {
-  if (count >= 10) return "#ffe4e6"; // rose-100
-  if (count >= 5) return "#ffedd5"; // orange-100
-  if (count >= 2) return "#fef3c7"; // amber-100
-  return "#f1f5f9"; // slate-100 (1건 이하)
+  if (count >= 10) return "#ffe4e6";
+  if (count >= 5) return "#ffedd5";
+  if (count >= 2) return "#fef3c7";
+  return "#f1f5f9";
 }
 
-const HOVER_FILL = "#dbeafe"; // blue-100
-const HOVER_STROKE = "#3b82f6"; // blue-500
-const BASE_STROKE = "#cbd5e1"; // slate-300
+const HOVER_FILL = "#dbeafe";
+const HOVER_STROKE = "#3b82f6";
+const BASE_STROKE = "#cbd5e1";
 
-export function RegionMap({ counts }: { counts: Record<District, number> }) {
+export function RegionMap({
+  counts,
+  selected,
+  onSelect,
+}: {
+  counts: Record<District, number>;
+  selected?: District | null;
+  onSelect?: (d: District) => void;
+}) {
   const router = useRouter();
   const [hovered, setHovered] = useState<District | null>(null);
-  const go = (d: District) => router.push(`/events?district=${d}`);
+  // onSelect가 있으면 선택 동작, 없으면 목록으로 이동(대시보드)
+  const handle = (d: District) =>
+    onSelect ? onSelect(d) : router.push(`/events?district=${d}`);
 
   return (
     <div
@@ -72,7 +79,7 @@ export function RegionMap({ counts }: { counts: Record<District, number> }) {
         className="absolute inset-0 size-full"
       >
         {CELLS.map((c) => {
-          const on = hovered === c.value;
+          const on = hovered === c.value || selected === c.value;
           return (
             <polygon
               key={c.value}
@@ -84,12 +91,12 @@ export function RegionMap({ counts }: { counts: Record<District, number> }) {
               strokeLinejoin="round"
               onMouseEnter={() => setHovered(c.value)}
               onMouseLeave={() => setHovered(null)}
-              onClick={() => go(c.value)}
+              onClick={() => handle(c.value)}
             />
           );
         })}
         {ONGJIN_ISLES.map((i, idx) => {
-          const on = hovered === "ongjin";
+          const on = hovered === "ongjin" || selected === "ongjin";
           return (
             <circle
               key={idx}
@@ -102,34 +109,33 @@ export function RegionMap({ counts }: { counts: Record<District, number> }) {
               strokeWidth={on ? 0.9 : 0.5}
               onMouseEnter={() => setHovered("ongjin")}
               onMouseLeave={() => setHovered(null)}
-              onClick={() => go("ongjin")}
+              onClick={() => handle("ongjin")}
             />
           );
         })}
       </svg>
 
-      {/* 권역 버블 */}
       {DISTRICTS.map((d) => {
         const count = counts[d.value] ?? 0;
         const pos = POS[d.value];
         const size = 22 + Math.min(count, 10) * 2.2;
-        const on = hovered === d.value;
+        const on = hovered === d.value || selected === d.value;
         return (
           <button
             key={d.value}
             type="button"
-            onClick={() => go(d.value)}
+            onClick={() => handle(d.value)}
             onMouseEnter={() => setHovered(d.value)}
             onMouseLeave={() => setHovered(null)}
-            title={`${d.label} ${count}건 · 클릭하면 목록`}
+            title={`${d.label} ${count}건`}
             aria-label={`${d.label} ${count}건`}
             className="absolute z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
             style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
           >
             <span
               className={cn(
-                "flex items-center justify-center rounded-full font-bold text-white shadow-sm ring-2 ring-white transition-transform",
-                on && "scale-110",
+                "flex items-center justify-center rounded-full font-bold text-white shadow-sm ring-2 transition-transform",
+                on ? "scale-110 ring-blue-400" : "ring-white",
                 regionTier(count).fill,
               )}
               style={{
