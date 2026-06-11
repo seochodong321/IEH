@@ -22,12 +22,16 @@ function rowToRecord(r: EventRow): EventRecord {
     category: r.category,
     startDate: r.startDate,
     endDate: r.endDate,
+    startTime: r.startTime,
+    endTime: r.endTime,
     recurrenceType: (r.recurrenceType as EventRecord["recurrenceType"]) ?? "none",
     recurrenceDays: r.recurrenceDays ?? [],
     venue: r.venue,
     district: r.district,
+    orgType: (r.orgType as EventRecord["orgType"]) ?? "public",
     organizer: r.organizer,
     host: r.host,
+    contact: r.contact,
     indoorOutdoor: r.indoorOutdoor,
     description: r.description ?? "",
     websiteUrl: r.websiteUrl,
@@ -49,12 +53,16 @@ function inputToValues(input: EventInput) {
     category: input.category,
     startDate: input.startDate,
     endDate: input.endDate,
+    startTime: input.startTime,
+    endTime: input.endTime,
     recurrenceType: input.recurrenceType,
     recurrenceDays: input.recurrenceDays,
     venue: input.venue,
     district: input.district,
+    orgType: input.orgType,
     organizer: input.organizer,
     host: input.host,
+    contact: input.contact,
     indoorOutdoor: input.indoorOutdoor,
     description: input.description,
     websiteUrl: input.websiteUrl,
@@ -88,6 +96,7 @@ function applyFilters(list: EventRecord[], filters: EventFilters): EventRecord[]
   }
   if (filters.category) out = out.filter((e) => e.category === filters.category);
   if (filters.district) out = out.filter((e) => e.district === filters.district);
+  if (filters.featured) out = out.filter((e) => e.isFeatured);
   if (filters.status)
     out = out.filter(
       (e) => computeStatus(e.startDate, e.endDate) === filters.status,

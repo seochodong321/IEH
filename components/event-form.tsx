@@ -17,6 +17,7 @@ import {
   CATEGORIES,
   DISTRICTS,
   INDOOR_OUTDOOR,
+  ORG_TYPES,
   RECURRENCE_OPTIONS,
   WEEKDAYS_KO,
   labelRecord,
@@ -28,6 +29,7 @@ import type {
   District,
   EventRecord,
   IndoorOutdoor,
+  OrgType,
   RecurrenceType,
 } from "@/lib/types";
 
@@ -36,6 +38,7 @@ type Action = (prev: FormState, formData: FormData) => Promise<FormState>;
 const categoryItems = labelRecord(CATEGORIES);
 const districtItems = labelRecord(DISTRICTS);
 const indoorItems = labelRecord(INDOOR_OUTDOOR);
+const orgTypeItems = labelRecord(ORG_TYPES);
 const recurrenceItems = Object.fromEntries(
   RECURRENCE_OPTIONS.map((o) => [o.value, o.label]),
 );
@@ -68,6 +71,7 @@ export function EventForm({
   const [indoorOutdoor, setIndoorOutdoor] = useState<IndoorOutdoor>(
     event?.indoorOutdoor ?? "outdoor",
   );
+  const [orgType, setOrgType] = useState<OrgType>(event?.orgType ?? "public");
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(
     event?.recurrenceType ?? "none",
   );
@@ -84,6 +88,7 @@ export function EventForm({
       <input type="hidden" name="category" value={category} />
       <input type="hidden" name="district" value={district} />
       <input type="hidden" name="indoorOutdoor" value={indoorOutdoor} />
+      <input type="hidden" name="orgType" value={orgType} />
       <input type="hidden" name="recurrenceType" value={recurrenceType} />
       <input
         type="hidden"
@@ -162,6 +167,24 @@ export function EventForm({
             required
           />
         </Field>
+
+        <Field label="시작 시간 (선택)" htmlFor="startTime">
+          <Input
+            id="startTime"
+            name="startTime"
+            type="time"
+            defaultValue={event?.startTime ?? ""}
+          />
+        </Field>
+
+        <Field label="종료 시간 (선택)" htmlFor="endTime">
+          <Input
+            id="endTime"
+            name="endTime"
+            type="time"
+            defaultValue={event?.endTime ?? ""}
+          />
+        </Field>
       </div>
 
       <Field label="반복 설정" required>
@@ -227,6 +250,46 @@ export function EventForm({
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="주최 구분" required>
+          <Select
+            items={orgTypeItems}
+            value={orgType}
+            onValueChange={(v) => setOrgType(String(v) as OrgType)}
+          >
+            <SelectTrigger className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ORG_TYPES.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Field label="실내/실외" required>
+          <Select
+            items={indoorItems}
+            value={indoorOutdoor}
+            onValueChange={(v) => setIndoorOutdoor(String(v) as IndoorOutdoor)}
+          >
+            <SelectTrigger className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {INDOOR_OUTDOOR.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
         <Field label="주최기관" htmlFor="organizer" required>
           <Input
             id="organizer"
@@ -241,23 +304,13 @@ export function EventForm({
         </Field>
       </div>
 
-      <Field label="실내/실외" required>
-        <Select
-          items={indoorItems}
-          value={indoorOutdoor}
-          onValueChange={(v) => setIndoorOutdoor(String(v) as IndoorOutdoor)}
-        >
-          <SelectTrigger className="h-9 w-full sm:w-[200px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {INDOOR_OUTDOOR.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <Field label="문의 연락처 (선택)" htmlFor="contact">
+        <Input
+          id="contact"
+          name="contact"
+          defaultValue={event?.contact ?? ""}
+          placeholder="전화번호 또는 이메일"
+        />
       </Field>
 
       <Field label="행사 설명" htmlFor="description">
@@ -292,14 +345,31 @@ export function EventForm({
         </Field>
       </div>
 
-      <Field label="대표 이미지 URL" htmlFor="imageUrl">
-        <Input
-          id="imageUrl"
-          name="imageUrl"
-          type="url"
-          defaultValue={event?.imageUrl ?? ""}
-          placeholder="https:// (비우면 카테고리 색 썸네일로 표시)"
+      <Field label="대표 이미지 (선택)" htmlFor="imageFile">
+        <input type="hidden" name="currentImageUrl" value={event?.imageUrl ?? ""} />
+        {event?.imageUrl ? (
+          <div className="mb-2 flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={event.imageUrl}
+              alt="현재 대표 이미지"
+              className="h-16 w-24 rounded-md object-cover ring-1 ring-foreground/10"
+            />
+            <span className="text-xs text-muted-foreground">
+              현재 이미지 · 새 파일을 올리면 교체됩니다
+            </span>
+          </div>
+        ) : null}
+        <input
+          id="imageFile"
+          name="imageFile"
+          type="file"
+          accept="image/*"
+          className="block w-full cursor-pointer text-sm text-muted-foreground file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-muted/70"
         />
+        <p className="mt-1 text-xs text-muted-foreground">
+          JPG·PNG 등 이미지 파일 업로드. 비우면 카테고리 색 썸네일로 표시됩니다.
+        </p>
       </Field>
 
       <label className="flex w-fit cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm">

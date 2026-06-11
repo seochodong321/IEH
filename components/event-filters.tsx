@@ -25,6 +25,7 @@ interface InitialFilters {
   to?: string;
   sort?: string;
   includeEnded?: boolean;
+  featured?: boolean;
 }
 
 let debounceTimer: ReturnType<typeof setTimeout>;
@@ -107,6 +108,12 @@ export function EventFilters({
       onClick: () =>
         setParams({ status: "ongoing", from: undefined, to: undefined }),
     },
+    {
+      label: "주요",
+      active: Boolean(initial.featured),
+      onClick: () =>
+        setParams({ featured: initial.featured ? undefined : "1" }),
+    },
   ];
 
   const hasFilters = Boolean(
@@ -117,7 +124,8 @@ export function EventFilters({
       initial.from ||
       initial.to ||
       (initial.sort && initial.sort !== "start") ||
-      initial.includeEnded,
+      initial.includeEnded ||
+      initial.featured,
   );
 
   return (

@@ -39,18 +39,24 @@ export const indoorOutdoorEnum = pgEnum("indoor_outdoor", [
   "mixed",
 ]);
 
+export const orgTypeEnum = pgEnum("org_type", ["public", "private", "ppp"]);
+
 export const events = pgTable("events", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
   category: categoryEnum("category").notNull(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
+  startTime: text("start_time"),
+  endTime: text("end_time"),
   recurrenceType: text("recurrence_type").notNull().default("none"),
   recurrenceDays: integer("recurrence_days").array(),
   venue: text("venue").notNull(),
   district: districtEnum("district").notNull(),
+  orgType: orgTypeEnum("org_type").notNull().default("public"),
   organizer: text("organizer").notNull(),
   host: text("host").notNull(),
+  contact: text("contact"),
   indoorOutdoor: indoorOutdoorEnum("indoor_outdoor").notNull(),
   description: text("description").notNull().default(""),
   websiteUrl: text("website_url"),
@@ -98,3 +104,20 @@ export const submissions = pgTable("submissions", {
 
 export type SubmissionRow = typeof submissions.$inferSelect;
 export type NewSubmissionRow = typeof submissions.$inferInsert;
+
+export const issueStatusEnum = pgEnum("issue_status", ["open", "resolved"]);
+
+// 신고: 기존 행사 정보 오류/변경 제보 → 관리자 검토 후 수정·삭제
+export const issues = pgTable("issues", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  eventId: uuid("event_id").notNull(),
+  eventTitle: text("event_title").notNull(),
+  message: text("message").notNull(),
+  reporterContact: text("reporter_contact"),
+  status: issueStatusEnum("status").notNull().default("open"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type IssueRow = typeof issues.$inferSelect;

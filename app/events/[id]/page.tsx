@@ -6,10 +6,12 @@ import {
   Building2,
   CalendarDays,
   CalendarPlus,
+  Clock,
   ExternalLink,
   Home,
   MapPin,
   Paperclip,
+  Phone,
   Repeat,
   Star,
   Users,
@@ -18,12 +20,14 @@ import { CategoryBadge, StatusBadge } from "@/components/event-badges";
 import { EventThumb } from "@/components/event-thumb";
 import { ShareButton } from "@/components/share-button";
 import { LikeButton } from "@/components/like-button";
+import { ReportIssueButton } from "@/components/report-issue-button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventById } from "@/lib/data/events";
 import {
   DISTRICT_MAP,
   INDOOR_OUTDOOR_MAP,
+  ORG_TYPE_MAP,
 } from "@/lib/constants";
 import { formatDate, formatDateRange, recurrenceLabel } from "@/lib/event-utils";
 
@@ -73,6 +77,7 @@ export default async function EventDetailPage({
             캘린더 추가
           </a>
           <ShareButton />
+          <ReportIssueButton eventId={event.id} eventTitle={event.title} />
         </div>
       </div>
 
@@ -86,6 +91,14 @@ export default async function EventDetailPage({
         <div className="p-6">
         <div className="flex flex-wrap items-center gap-2">
           <CategoryBadge value={event.category} />
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
+              ORG_TYPE_MAP[event.orgType].badgeClass,
+            )}
+          >
+            {ORG_TYPE_MAP[event.orgType].label}
+          </span>
           <StatusBadge startDate={event.startDate} endDate={event.endDate} />
           {event.isFeatured ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
@@ -98,6 +111,9 @@ export default async function EventDetailPage({
         <p className="mt-2 flex items-center gap-1.5 text-muted-foreground">
           <CalendarDays className="size-4" />
           {formatDateRange(event.startDate, event.endDate)}
+          {event.startTime
+            ? ` · ${event.startTime}${event.endTime ? `~${event.endTime}` : ""}`
+            : ""}
         </p>
 
         <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
@@ -105,8 +121,18 @@ export default async function EventDetailPage({
           <InfoRow icon={CalendarDays} label="종료일" value={formatDate(event.endDate)} />
           <InfoRow icon={MapPin} label="장소" value={event.venue} />
           <InfoRow icon={MapPin} label="권역" value={DISTRICT_MAP[event.district].label} />
+          {event.startTime ? (
+            <InfoRow
+              icon={Clock}
+              label="시간"
+              value={`${event.startTime}${event.endTime ? ` ~ ${event.endTime}` : ""}`}
+            />
+          ) : null}
           <InfoRow icon={Building2} label="주최" value={event.organizer} />
           <InfoRow icon={Users} label="주관" value={event.host} />
+          {event.contact ? (
+            <InfoRow icon={Phone} label="문의" value={event.contact} />
+          ) : null}
           <InfoRow
             icon={Home}
             label="실내/실외"

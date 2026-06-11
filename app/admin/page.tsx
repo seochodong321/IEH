@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Inbox, LogOut, Plus } from "lucide-react";
+import { Flag, Inbox, LogOut, Plus } from "lucide-react";
 import { requireAuth } from "@/lib/auth";
 import { logout } from "@/actions/auth";
 import { getEvents } from "@/lib/data/events";
 import { getPendingCount } from "@/lib/data/submissions";
+import { getOpenIssueCount } from "@/lib/data/issues";
 import { AdminEventTable } from "@/components/admin-event-table";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -12,9 +13,10 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   await requireAuth();
-  const [events, pendingReports] = await Promise.all([
+  const [events, pendingReports, openIssues] = await Promise.all([
     getEvents(),
     getPendingCount(),
+    getOpenIssueCount(),
   ]);
 
   return (
@@ -42,6 +44,18 @@ export default async function AdminPage() {
             {pendingReports > 0 ? (
               <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-medium text-white">
                 {pendingReports}
+              </span>
+            ) : null}
+          </Link>
+          <Link
+            href="/admin/issues"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            <Flag className="size-4" />
+            신고 처리
+            {openIssues > 0 ? (
+              <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-medium text-white">
+                {openIssues}
               </span>
             ) : null}
           </Link>

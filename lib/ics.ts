@@ -44,6 +44,16 @@ function foldLine(line: string): string {
   return chunks.join("\r\n ");
 }
 
+function timeCompact(t: string): string {
+  return t.replace(":", "") + "00"; // "14:00" → "140000"
+}
+
+function addOneHour(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  const nh = (h + 1) % 24;
+  return `${String(nh).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
 // 매주 반복이면 시작일 이후 첫 발생일을 DTSTART로 사용
 function firstOccurrence(e: EventRecord): string {
   if (e.recurrenceType !== "weekly") return e.startDate;
@@ -72,20 +82,33 @@ export function eventToICS(e: EventRecord): string {
     `UID:${e.id}@incheon-event-radar`,
     `DTSTAMP:${dtstamp}`,
     `SUMMARY:${esc(e.title)}`,
-    `DTSTART;VALUE=DATE:${dateOnly(start)}`,
   ];
 
-  if (e.recurrenceType === "weekly") {
-    // 종일 단일 occurrence + 매주 반복
+  const weekly = e.recurrenceType === "weekly";
+
+  if (e.startTime) {
+    // 시간 지정 일정 → DATE-TIME (Asia/Seoul). 종료시간 없으면 +1시간.
+    const st = e.startTime;
+    const et = e.endTime || addOneHour(st);
+    const endBase = weekly ? start : e.endDate;
+    lines.push(`DTSTART;TZID=Asia/Seoul:${dateOnly(start)}T${timeCompact(st)}`);
+    lines.push(`DTEND;TZID=Asia/Seoul:${dateOnly(endBase)}T${timeCompact(et)}`);
+  } else if (weekly) {
+    // 종일 단일 occurrence
+    lines.push(`DTSTART;VALUE=DATE:${dateOnly(start)}`);
     lines.push(`DTEND;VALUE=DATE:${dateOnly(addDays(start, 1))}`);
+  } else {
+    // 연속 종일 일정 (DTEND는 배타적이라 종료일+1)
+    lines.push(`DTSTART;VALUE=DATE:${dateOnly(start)}`);
+    lines.push(`DTEND;VALUE=DATE:${dateOnly(addDays(e.endDate, 1))}`);
+  }
+
+  if (weekly) {
     const days = [...e.recurrenceDays]
       .sort((a, b) => a - b)
       .map((d) => BYDAY[d])
       .join(",");
     lines.push(`RRULE:FREQ=WEEKLY;BYDAY=${days};UNTIL=${dateOnly(e.endDate)}`);
-  } else {
-    // 연속 종일 일정 (DTEND는 배타적이라 종료일+1)
-    lines.push(`DTEND;VALUE=DATE:${dateOnly(addDays(e.endDate, 1))}`);
   }
 
   lines.push(`LOCATION:${esc(`${DISTRICT_MAP[e.district].label} · ${e.venue}`)}`);

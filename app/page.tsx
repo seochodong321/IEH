@@ -15,7 +15,13 @@ import { RegionDistributionPanel } from "@/components/region-distribution-panel"
 import { EventTable } from "@/components/event-table";
 import { Panel } from "@/components/panel";
 import { getAllEvents } from "@/lib/data/events";
-import { computeStatus, getStats, todayKST } from "@/lib/event-utils";
+import {
+  computeStatus,
+  getStats,
+  monthRange,
+  todayKST,
+  weekRange,
+} from "@/lib/event-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +36,8 @@ export default async function DashboardPage() {
   const events = await getAllEvents();
   const stats = getStats(events, today);
   const featuredCount = events.filter((e) => e.isFeatured).length;
+  const week = weekRange(today);
+  const month = monthRange(today);
 
   const featured = events
     .filter((e) => e.isFeatured)
@@ -84,6 +92,7 @@ export default async function DashboardPage() {
           sub="오늘 진행"
           icon={CalendarDays}
           accentClass="bg-blue-100 text-blue-700"
+          href={`/events?from=${today}&to=${today}`}
         />
         <StatCard
           label="이번 주 행사"
@@ -91,6 +100,7 @@ export default async function DashboardPage() {
           sub="이번 주 전체"
           icon={CalendarRange}
           accentClass="bg-violet-100 text-violet-700"
+          href={`/events?from=${week.start}&to=${week.end}`}
         />
         <StatCard
           label="이번 달 행사"
@@ -98,6 +108,7 @@ export default async function DashboardPage() {
           sub="이번 달 전체"
           icon={CalendarCheck}
           accentClass="bg-amber-100 text-amber-700"
+          href={`/events?from=${month.start}&to=${month.end}`}
         />
         <StatCard
           label="주요 행사"
@@ -105,6 +116,7 @@ export default async function DashboardPage() {
           sub="전체 행사 중"
           icon={Star}
           accentClass="bg-rose-100 text-rose-700"
+          href="/events?featured=1"
         />
         <StatCard
           label="진행 중 행사"
@@ -112,6 +124,7 @@ export default async function DashboardPage() {
           sub="현재 진행중"
           icon={Activity}
           accentClass="bg-emerald-100 text-emerald-700"
+          href="/events?status=ongoing"
         />
       </section>
 

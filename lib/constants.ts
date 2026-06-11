@@ -7,6 +7,7 @@ import type {
   District,
   EventStatus,
   IndoorOutdoor,
+  OrgType,
   RecurrenceType,
 } from "@/lib/types";
 
@@ -115,6 +116,27 @@ export const INDOOR_OUTDOOR: Option<IndoorOutdoor>[] = [
   { value: "mixed", label: "혼합", badgeClass: "", dotClass: "" },
 ];
 
+export const ORG_TYPES: Option<OrgType>[] = [
+  {
+    value: "public",
+    label: "공공",
+    badgeClass: "bg-blue-100 text-blue-700 border-blue-200",
+    dotClass: "bg-blue-500",
+  },
+  {
+    value: "private",
+    label: "민간",
+    badgeClass: "bg-slate-100 text-slate-700 border-slate-200",
+    dotClass: "bg-slate-500",
+  },
+  {
+    value: "ppp",
+    label: "민관",
+    badgeClass: "bg-teal-100 text-teal-700 border-teal-200",
+    dotClass: "bg-teal-500",
+  },
+];
+
 // value → Option 빠른 조회용 맵
 function toMap<T extends string>(options: Option<T>[]): Record<T, Option<T>> {
   return Object.fromEntries(options.map((o) => [o.value, o])) as Record<
@@ -127,6 +149,7 @@ export const CATEGORY_MAP = toMap(CATEGORIES);
 export const DISTRICT_MAP = toMap(DISTRICTS);
 export const STATUS_MAP = toMap(STATUSES);
 export const INDOOR_OUTDOOR_MAP = toMap(INDOOR_OUTDOOR);
+export const ORG_TYPE_MAP = toMap(ORG_TYPES);
 
 // 라벨만 필요한 곳(예: Select items 맵)을 위한 헬퍼
 export function labelRecord<T extends string>(

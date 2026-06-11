@@ -26,6 +26,9 @@ export type District =
 
 export type IndoorOutdoor = "indoor" | "outdoor" | "mixed";
 
+// 주최 주체 구분: 공공 / 민간 / 민관 협력
+export type OrgType = "public" | "private" | "ppp";
+
 // 반복 유형: none = 기간 내내 연속, weekly = 매주 특정 요일 반복
 export type RecurrenceType = "none" | "weekly";
 
@@ -44,12 +47,20 @@ export interface EventRecord {
   recurrenceType: RecurrenceType;
   /** weekly일 때 반복 요일 (0=일 ... 6=토) */
   recurrenceDays: number[];
+  /** 시작 시간 (HH:MM, 없으면 종일) */
+  startTime: string | null;
+  /** 종료 시간 (HH:MM) */
+  endTime: string | null;
   venue: string;
   district: District;
+  /** 주최 주체 구분 */
+  orgType: OrgType;
   /** 주최 */
   organizer: string;
   /** 주관 */
   host: string;
+  /** 문의 연락처 (전화/이메일 등) */
+  contact: string | null;
   indoorOutdoor: IndoorOutdoor;
   description: string;
   websiteUrl: string | null;
@@ -101,6 +112,24 @@ export type SubmissionInput = Omit<
   "id" | "status" | "createdAt"
 >;
 
+// ── 신고(기존 행사 정보 오류·변경 제보) ──
+export type IssueStatus = "open" | "resolved";
+
+export interface EventIssue {
+  id: string;
+  /** 대상 행사 id */
+  eventId: string;
+  /** 대상 행사명 스냅샷 (행사가 변경·삭제돼도 표시되도록) */
+  eventTitle: string;
+  /** 신고 내용 */
+  message: string;
+  reporterContact: string | null;
+  status: IssueStatus;
+  createdAt: string;
+}
+
+export type IssueInput = Omit<EventIssue, "id" | "status" | "createdAt">;
+
 // 행사 목록 검색/필터 조건
 export interface EventFilters {
   /** 행사명·장소·주최·주관 통합 검색어 */
@@ -115,4 +144,6 @@ export interface EventFilters {
   sort?: "start" | "created" | "status";
   /** 종료된 행사 포함 여부 (미지정 시 전부 포함 — 관리자 등) */
   includeEnded?: boolean;
+  /** 주요(대표) 행사만 */
+  featured?: boolean;
 }

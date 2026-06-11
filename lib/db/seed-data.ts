@@ -4,6 +4,7 @@ import type {
   EventRecord,
   EventSubmission,
   IndoorOutdoor,
+  OrgType,
   RecurrenceType,
 } from "@/lib/types";
 
@@ -33,6 +34,10 @@ function make(e: {
   recurrenceType?: RecurrenceType;
   recurrenceDays?: number[];
   likes?: number;
+  startTime?: string | null;
+  endTime?: string | null;
+  orgType?: OrgType;
+  contact?: string | null;
 }): EventRecord {
   counter += 1;
   return {
@@ -43,11 +48,15 @@ function make(e: {
     district: e.district,
     startDate: e.startDate,
     endDate: e.endDate,
+    startTime: e.startTime ?? null,
+    endTime: e.endTime ?? null,
     recurrenceType: e.recurrenceType ?? "none",
     recurrenceDays: e.recurrenceDays ?? [],
     venue: e.venue,
+    orgType: e.orgType ?? "public",
     organizer: e.organizer,
     host: e.host,
+    contact: e.contact ?? null,
     indoorOutdoor: e.indoorOutdoor,
     description: e.description,
     websiteUrl: e.websiteUrl ?? null,

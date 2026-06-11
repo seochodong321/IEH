@@ -47,6 +47,7 @@ export default async function EventsPage({
   const sort: EventFiltersType["sort"] =
     rawSort === "created" || rawSort === "status" ? rawSort : "start";
   const includeEnded = str("ended") === "1";
+  const featured = str("featured") === "1";
   const today = todayKST();
 
   const events = await getEvents({
@@ -58,6 +59,7 @@ export default async function EventsPage({
     to,
     sort,
     includeEnded,
+    featured,
   });
 
   return (
@@ -80,6 +82,7 @@ export default async function EventsPage({
           to,
           sort,
           includeEnded,
+          featured,
         }}
       />
 

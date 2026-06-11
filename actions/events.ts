@@ -1,5 +1,6 @@
 "use server";
 
+import { put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
@@ -14,17 +15,22 @@ import {
   CATEGORY_MAP,
   DISTRICT_MAP,
   INDOOR_OUTDOOR_MAP,
+  ORG_TYPE_MAP,
 } from "@/lib/constants";
 import type {
   Category,
   District,
   EventInput,
   IndoorOutdoor,
+  OrgType,
 } from "@/lib/types";
 
 export type FormState = { error?: string };
 
+const TIME_RE = /^\d{2}:\d{2}$/;
+
 // 성공 시 EventInput, 실패 시 오류 메시지(string)를 반환한다.
+// imageUrl 은 여기서 currentImageUrl(기존값)로 채우고, 새 파일 업로드 시 액션에서 덮어쓴다.
 function parseEvent(formData: FormData): EventInput | string {
   const get = (k: string) => String(formData.get(k) ?? "").trim();
 
@@ -32,15 +38,18 @@ function parseEvent(formData: FormData): EventInput | string {
   const category = get("category") as Category;
   const startDate = get("startDate");
   const endDate = get("endDate");
+  const startTime = get("startTime");
+  const endTime = get("endTime");
   const venue = get("venue");
   const district = get("district") as District;
+  const orgType = get("orgType") as OrgType;
   const organizer = get("organizer");
   const host = get("host");
+  const contact = get("contact");
   const indoorOutdoor = get("indoorOutdoor") as IndoorOutdoor;
   const description = get("description");
   const websiteUrl = get("websiteUrl");
   const attachmentUrl = get("attachmentUrl");
-  const imageUrl = get("imageUrl");
   const isFeatured = formData.get("isFeatured") === "on";
   const recurrenceType = get("recurrenceType") === "weekly" ? "weekly" : "none";
   const recurrenceDays =
@@ -59,8 +68,11 @@ function parseEvent(formData: FormData): EventInput | string {
   if (!(category in CATEGORY_MAP)) return "행사유형을 선택하세요.";
   if (!startDate || !endDate) return "시작일과 종료일을 입력하세요.";
   if (endDate < startDate) return "종료일은 시작일보다 빠를 수 없습니다.";
+  if (startTime && !TIME_RE.test(startTime)) return "시작 시간 형식이 올바르지 않습니다.";
+  if (endTime && !TIME_RE.test(endTime)) return "종료 시간 형식이 올바르지 않습니다.";
   if (!venue) return "장소를 입력하세요.";
   if (!(district in DISTRICT_MAP)) return "권역을 선택하세요.";
+  if (!(orgType in ORG_TYPE_MAP)) return "주최 구분을 선택하세요.";
   if (!organizer) return "주최기관을 입력하세요.";
   if (!host) return "주관기관을 입력하세요.";
   if (!(indoorOutdoor in INDOOR_OUTDOOR_MAP)) return "실내/실외를 선택하세요.";
@@ -72,19 +84,41 @@ function parseEvent(formData: FormData): EventInput | string {
     category,
     startDate,
     endDate,
+    startTime: startTime || null,
+    endTime: endTime || null,
     recurrenceType,
     recurrenceDays,
     venue,
     district,
+    orgType,
     organizer,
     host,
+    contact: contact || null,
     indoorOutdoor,
     description,
     websiteUrl: websiteUrl || null,
     attachmentUrl: attachmentUrl || null,
-    imageUrl: imageUrl || null,
+    imageUrl: get("currentImageUrl") || null,
     isFeatured,
   };
+}
+
+// 새 이미지 파일이 있으면 Vercel Blob에 업로드하고 URL을 반환한다.
+// 파일이 없으면 null(=기존 imageUrl 유지). 실패 시 throw.
+async function maybeUploadImage(formData: FormData): Promise<string | null> {
+  const file = formData.get("imageFile");
+  if (!(file instanceof File) || file.size === 0) return null;
+  if (!file.type.startsWith("image/")) {
+    throw new Error("이미지 파일만 업로드할 수 있습니다.");
+  }
+  const ext = file.name.includes(".")
+    ? file.name.split(".").pop()!.toLowerCase()
+    : "img";
+  const blob = await put(`events/${crypto.randomUUID()}.${ext}`, file, {
+    access: "public",
+    contentType: file.type,
+  });
+  return blob.url;
 }
 
 function revalidateAll(id?: string) {
@@ -102,6 +136,16 @@ export async function createEventAction(
   await requireAuth();
   const parsed = parseEvent(formData);
   if (typeof parsed === "string") return { error: parsed };
+  try {
+    const uploaded = await maybeUploadImage(formData);
+    if (uploaded) parsed.imageUrl = uploaded;
+  } catch (e) {
+    return {
+      error:
+        "이미지 업로드 실패: " +
+        (e instanceof Error ? e.message : "스토리지(Blob) 설정을 확인하세요."),
+    };
+  }
   await createEvent(parsed);
   // 제보로부터 등록된 경우 해당 제보를 승인 처리
   const fromSubmission = String(formData.get("fromSubmission") ?? "");
@@ -121,6 +165,16 @@ export async function updateEventAction(
   await requireAuth();
   const parsed = parseEvent(formData);
   if (typeof parsed === "string") return { error: parsed };
+  try {
+    const uploaded = await maybeUploadImage(formData);
+    if (uploaded) parsed.imageUrl = uploaded;
+  } catch (e) {
+    return {
+      error:
+        "이미지 업로드 실패: " +
+        (e instanceof Error ? e.message : "스토리지(Blob) 설정을 확인하세요."),
+    };
+  }
   const updated = await updateEvent(id, parsed);
   if (!updated) return { error: "행사를 찾을 수 없습니다." };
   revalidateAll(id);
