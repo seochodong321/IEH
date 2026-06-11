@@ -42,7 +42,9 @@ export function RegionDistributionPanel({ events }: { events: EventRecord[] }) {
 
       <div className="flex-1">
         {view === "map" ? (
-          <RegionMap counts={counts} />
+          <div className="flex h-full items-center justify-center">
+            <RegionMap counts={counts} />
+          </div>
         ) : (
           <RegionBars counts={counts} />
         )}

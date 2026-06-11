@@ -50,7 +50,7 @@ export function MiniCalendar({
   const monthLabel = `${cursor.getFullYear()}년 ${cursor.getMonth() + 1}월`;
 
   return (
-    <div>
+    <div className="flex h-full flex-col">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-1">
           <Button
@@ -102,7 +102,7 @@ export function MiniCalendar({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-y-1">
+      <div className="grid flex-1 auto-rows-fr grid-cols-7 gap-y-1">
         {days.map((day) => {
           const key = format(day, "yyyy-MM-dd");
           const count = countByDay.get(key) ?? 0;
@@ -117,7 +117,7 @@ export function MiniCalendar({
               disabled={count === 0}
               onClick={() => router.push(`/events?from=${key}&to=${key}`)}
               className={cn(
-                "flex h-12 flex-col items-center gap-0.5 rounded-md p-1 text-xs transition-colors",
+                "flex h-full min-h-11 flex-col items-center gap-0.5 rounded-md p-1 text-xs transition-colors",
                 count > 0 && "cursor-pointer hover:bg-muted",
                 !inMonth && "opacity-40",
               )}

@@ -11,7 +11,7 @@ export function RegionBars({ counts }: { counts: Record<District, number> }) {
   const max = Math.max(1, ...rows.map((r) => r.count));
 
   return (
-    <ul className="space-y-2">
+    <ul className="flex h-full flex-col justify-between gap-2">
       {rows.map((r) => (
         <li key={r.label} className="flex items-center gap-2 text-sm">
           <span className="w-16 shrink-0 text-muted-foreground">{r.label}</span>
