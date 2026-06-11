@@ -6,29 +6,30 @@ import { DISTRICT_MAP } from "@/lib/constants";
 import { DISTRICT_SHAPES, MAP_H, MAP_W } from "@/lib/incheon-geo";
 import type { District } from "@/lib/types";
 
-// 실제 행정경계(lib/incheon-geo.ts) 위에 건수 버블을 얹은 인천 2군 9구 지도.
-// 구역은 건수별 톤온톤 연한 음영, 버블은 진한 포인트색 — 앱 톤앤매너에 맞춤.
+// 모던 버블맵: 행정경계는 차분한 배경(연한 회색 + 얇은 경계),
+// 그 위에 건수 버블(앱 톤 블루→바이올렛, 크기=건수)이 떠 있다.
 
 // 버블 위치 미세조정 (중심점이 어색한 좁은 구만)
 const ADJ: Partial<Record<District, { dx?: number; dy?: number }>> = {
-  jemulpo: { dx: -2, dy: 4 },
+  jemulpo: { dx: -8, dy: 2 },
+  michuhol: { dx: 14, dy: 4 },
   ongjin: { dy: -6 },
   seo: { dy: 6 },
-  michuhol: { dx: 8 },
 };
 
-// 건수 구간별 색 (구역 연한 음영 / 버블 진한 색) — 같은 색 계열로 톤온톤
-function tier(count: number): { fill: string; bubble: string } {
-  if (count >= 10) return { fill: "#ffe4e6", bubble: "#f43f5e" }; // rose
-  if (count >= 5) return { fill: "#ffedd5", bubble: "#fb923c" }; // orange
-  if (count >= 2) return { fill: "#fef3c7", bubble: "#fbbf24" }; // amber
-  if (count >= 1) return { fill: "#d1fae5", bubble: "#10b981" }; // emerald
-  return { fill: "#eef2f6", bubble: "#94a3b8" }; // 0건: slate
+// 건수 → 버블 색 (hex). lib/region.ts 의 regionTier / 범례와 같은 계열.
+function bubbleColor(count: number): string {
+  if (count >= 10) return "#7c3aed"; // violet-600
+  if (count >= 5) return "#4f46e5"; // indigo-600
+  if (count >= 2) return "#3b82f6"; // blue-500
+  if (count >= 1) return "#38bdf8"; // sky-400
+  return "#cbd5e1"; // slate-300 (0건)
 }
 
-const HOVER_FILL = "#dbeafe"; // blue-100
-const HOVER_STROKE = "#2563eb"; // blue-600
-const BASE_STROKE = "#cbd5e1"; // slate-300
+const LAND = "#e9eef4"; // 차분한 배경 땅
+const LAND_HOVER = "#dbeafe"; // blue-100
+const LAND_STROKE = "#cdd6e0"; // slate-200~300
+const LAND_STROKE_HOVER = "#60a5fa"; // blue-400
 
 export function RegionMap({
   counts,
@@ -46,7 +47,7 @@ export function RegionMap({
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-lg bg-sky-50 ring-1 ring-sky-100"
+      className="relative w-full overflow-hidden rounded-lg bg-slate-50 ring-1 ring-slate-100"
       style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}
     >
       <svg
@@ -58,30 +59,25 @@ export function RegionMap({
           <filter id="bubbleShadow" x="-50%" y="-50%" width="200%" height="200%">
             <feDropShadow
               dx="0"
-              dy="1.5"
-              stdDeviation="1.6"
-              floodColor="#0f172a"
-              floodOpacity="0.28"
+              dy="2"
+              stdDeviation="2.2"
+              floodColor="#1e293b"
+              floodOpacity="0.22"
             />
           </filter>
         </defs>
 
-        <text x={MAP_W - 86} y={MAP_H - 26} fontSize="22" fill="#a8cdea" fontWeight="700">
-          서해
-        </text>
-
-        {/* 구역 면 */}
+        {/* 배경 땅 (차분) */}
         {DISTRICT_SHAPES.map((s) => {
-          const count = counts[s.value] ?? 0;
           const on = hovered === s.value || selected === s.value;
           return (
             <path
               key={s.value}
               d={s.d}
               className="cursor-pointer transition-[fill,stroke]"
-              fill={on ? HOVER_FILL : tier(count).fill}
-              stroke={on ? HOVER_STROKE : BASE_STROKE}
-              strokeWidth={on ? 2.5 : 1.1}
+              fill={on ? LAND_HOVER : LAND}
+              stroke={on ? LAND_STROKE_HOVER : LAND_STROKE}
+              strokeWidth={on ? 2 : 1}
               strokeLinejoin="round"
               onMouseEnter={() => setHovered(s.value)}
               onMouseLeave={() => setHovered(null)}
@@ -96,7 +92,7 @@ export function RegionMap({
           const on = hovered === s.value || selected === s.value;
           const cx = s.lx + (ADJ[s.value]?.dx ?? 0);
           const cy = s.ly + (ADJ[s.value]?.dy ?? 0);
-          const r = (18 + Math.min(count, 10) * 1.6) * (on ? 1.12 : 1);
+          const r = (17 + Math.min(count, 12) * 1.7) * (on ? 1.12 : 1);
           return (
             <g
               key={s.value + "-b"}
@@ -109,9 +105,10 @@ export function RegionMap({
                 cx={cx}
                 cy={cy}
                 r={r}
-                fill={tier(count).bubble}
-                stroke={on ? "#60a5fa" : "#ffffff"}
-                strokeWidth={on ? 3.5 : 2.5}
+                fill={bubbleColor(count)}
+                fillOpacity={count === 0 ? 0.7 : 0.95}
+                stroke="#ffffff"
+                strokeWidth={on ? 3 : 2}
                 filter="url(#bubbleShadow)"
               />
               <text
@@ -119,7 +116,7 @@ export function RegionMap({
                 y={cy}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fontSize={r * 0.9}
+                fontSize={r * 0.92}
                 fontWeight="800"
                 fill="#ffffff"
               >
@@ -129,11 +126,11 @@ export function RegionMap({
                 x={cx}
                 y={cy + r + 15}
                 textAnchor="middle"
-                fontSize="16.5"
+                fontSize="16"
                 fontWeight="700"
-                fill="#334155"
-                stroke="#ffffff"
-                strokeWidth="3.2"
+                fill="#475569"
+                stroke="#f8fafc"
+                strokeWidth="3"
                 paintOrder="stroke"
               >
                 {DISTRICT_MAP[s.value].label}
