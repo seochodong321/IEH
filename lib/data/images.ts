@@ -37,3 +37,12 @@ export async function getImage(id: string): Promise<StoredImage | null> {
   }
   return memory.get(id) ?? null;
 }
+
+/** 행사 삭제·포스터 교체 시 옛 이미지를 정리해 고아 행이 쌓이지 않게 한다 */
+export async function deleteImage(id: string): Promise<void> {
+  if (hasDatabase()) {
+    await getDb().delete(table).where(eq(table.id, id));
+    return;
+  }
+  memory.delete(id);
+}

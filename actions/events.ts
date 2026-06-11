@@ -7,9 +7,10 @@ import {
   addLike,
   createEvent,
   deleteEvent,
+  getEventById,
   updateEvent,
 } from "@/lib/data/events";
-import { createImage } from "@/lib/data/images";
+import { createImage, deleteImage } from "@/lib/data/images";
 import { setSubmissionStatus } from "@/lib/data/submissions";
 import {
   CATEGORY_MAP,
@@ -121,6 +122,12 @@ async function maybeUploadImage(formData: FormData): Promise<string | null> {
   return `/api/images/${id}`;
 }
 
+// 우리가 저장한 업로드 이미지("/api/images/{id}")면 id를, 아니면 null을 반환
+function uploadedImageId(url: string | null | undefined): string | null {
+  const m = url?.match(/^\/api\/images\/([0-9a-f-]{36})$/i);
+  return m ? m[1] : null;
+}
+
 function revalidateAll(id?: string) {
   revalidatePath("/");
   revalidatePath("/events");
@@ -165,9 +172,15 @@ export async function updateEventAction(
   await requireAuth();
   const parsed = parseEvent(formData);
   if (typeof parsed === "string") return { error: parsed };
+  let replacedImageId: string | null = null;
   try {
     const uploaded = await maybeUploadImage(formData);
-    if (uploaded) parsed.imageUrl = uploaded;
+    if (uploaded) {
+      // 포스터 교체 시 옛 업로드 이미지는 수정 성공 후 삭제 (고아 행 방지)
+      const prev = await getEventById(id);
+      replacedImageId = uploadedImageId(prev?.imageUrl);
+      parsed.imageUrl = uploaded;
+    }
   } catch (e) {
     return {
       error:
@@ -177,6 +190,7 @@ export async function updateEventAction(
   }
   const updated = await updateEvent(id, parsed);
   if (!updated) return { error: "행사를 찾을 수 없습니다." };
+  if (replacedImageId) await deleteImage(replacedImageId);
   revalidateAll(id);
   redirect("/admin");
 }
@@ -194,8 +208,12 @@ export async function toggleLikeAction(
 
 export async function deleteEventAction(id: string): Promise<FormState> {
   await requireAuth();
+  const prev = await getEventById(id);
   const ok = await deleteEvent(id);
   if (!ok) return { error: "행사를 찾을 수 없습니다." };
+  // 행사와 함께 업로드 이미지도 정리 (고아 행 방지)
+  const imageId = uploadedImageId(prev?.imageUrl);
+  if (imageId) await deleteImage(imageId);
   revalidateAll(id);
   return {};
 }
