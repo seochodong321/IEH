@@ -6,35 +6,29 @@ import { DISTRICT_MAP } from "@/lib/constants";
 import { DISTRICT_SHAPES, MAP_H, MAP_W } from "@/lib/incheon-geo";
 import type { District } from "@/lib/types";
 
-// 실제 행정경계 기반 인천 2군 9구 지도 (lib/incheon-geo.ts 생성 데이터 사용).
-// 건수별 음영 + 라벨, 클릭/호버/선택.
+// 실제 행정경계(lib/incheon-geo.ts) 위에 건수 버블을 얹은 인천 2군 9구 지도.
+// 구역은 건수별 톤온톤 연한 음영, 버블은 진한 포인트색 — 앱 톤앤매너에 맞춤.
 
-// 라벨 표시 설정: 글자 크기 / 위치 미세조정 (좁은 구는 작게·살짝 이동)
-const LABEL: Record<District, { fs: number; dx?: number; dy?: number }> = {
-  ganghwa: { fs: 26 },
-  ongjin: { fs: 18, dy: -34 },
-  yeongjong: { fs: 26 },
-  geomdan: { fs: 20 },
-  seo: { fs: 20, dy: 8 },
-  gyeyang: { fs: 16, dy: -6 },
-  bupyeong: { fs: 16 },
-  jemulpo: { fs: 12, dx: -26, dy: 18 },
-  michuhol: { fs: 13, dx: 12 },
-  namdong: { fs: 16, dy: 6 },
-  yeonsu: { fs: 18, dy: 10 },
+// 버블 위치 미세조정 (중심점이 어색한 좁은 구만)
+const ADJ: Partial<Record<District, { dx?: number; dy?: number }>> = {
+  jemulpo: { dx: -2, dy: 4 },
+  ongjin: { dy: -6 },
+  seo: { dy: 6 },
+  michuhol: { dx: 8 },
 };
 
-function tierFill(count: number): string {
-  if (count >= 10) return "#fda4af"; // rose-300
-  if (count >= 5) return "#fdba74"; // orange-300
-  if (count >= 2) return "#fde047"; // yellow-300
-  if (count >= 1) return "#fef9c3"; // yellow-100
-  return "#f1f5f9"; // slate-100
+// 건수 구간별 색 (구역 연한 음영 / 버블 진한 색) — 같은 색 계열로 톤온톤
+function tier(count: number): { fill: string; bubble: string } {
+  if (count >= 10) return { fill: "#ffe4e6", bubble: "#f43f5e" }; // rose
+  if (count >= 5) return { fill: "#ffedd5", bubble: "#fb923c" }; // orange
+  if (count >= 2) return { fill: "#fef3c7", bubble: "#fbbf24" }; // amber
+  if (count >= 1) return { fill: "#d1fae5", bubble: "#10b981" }; // emerald
+  return { fill: "#eef2f6", bubble: "#94a3b8" }; // 0건: slate
 }
 
-const HOVER_FILL = "#93c5fd"; // blue-300
-const HOVER_STROKE = "#1d4ed8"; // blue-700
-const BASE_STROKE = "#64748b"; // slate-500
+const HOVER_FILL = "#dbeafe"; // blue-100
+const HOVER_STROKE = "#2563eb"; // blue-600
+const BASE_STROKE = "#cbd5e1"; // slate-300
 
 export function RegionMap({
   counts,
@@ -60,11 +54,23 @@ export function RegionMap({
         preserveAspectRatio="xMidYMid meet"
         className="absolute inset-0 size-full"
       >
-        <text x={MAP_W - 90} y={MAP_H - 30} fontSize="24" fill="#9cc3e0" fontWeight="700">
+        <defs>
+          <filter id="bubbleShadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow
+              dx="0"
+              dy="1.5"
+              stdDeviation="1.6"
+              floodColor="#0f172a"
+              floodOpacity="0.28"
+            />
+          </filter>
+        </defs>
+
+        <text x={MAP_W - 86} y={MAP_H - 26} fontSize="22" fill="#a8cdea" fontWeight="700">
           서해
         </text>
 
-        {/* 면 (호버 중인 구역은 맨 뒤에 한 번 더 그려 외곽선이 위로 오게) */}
+        {/* 구역 면 */}
         {DISTRICT_SHAPES.map((s) => {
           const count = counts[s.value] ?? 0;
           const on = hovered === s.value || selected === s.value;
@@ -72,10 +78,10 @@ export function RegionMap({
             <path
               key={s.value}
               d={s.d}
-              className="cursor-pointer transition-[fill]"
-              fill={on ? HOVER_FILL : tierFill(count)}
+              className="cursor-pointer transition-[fill,stroke]"
+              fill={on ? HOVER_FILL : tier(count).fill}
               stroke={on ? HOVER_STROKE : BASE_STROKE}
-              strokeWidth={on ? 3 : 1.2}
+              strokeWidth={on ? 2.5 : 1.1}
               strokeLinejoin="round"
               onMouseEnter={() => setHovered(s.value)}
               onMouseLeave={() => setHovered(null)}
@@ -84,42 +90,53 @@ export function RegionMap({
           );
         })}
 
-        {/* 라벨 */}
+        {/* 버블 + 라벨 */}
         {DISTRICT_SHAPES.map((s) => {
           const count = counts[s.value] ?? 0;
-          const cfg = LABEL[s.value];
-          const x = s.lx + (cfg.dx ?? 0);
-          const y = s.ly + (cfg.dy ?? 0);
+          const on = hovered === s.value || selected === s.value;
+          const cx = s.lx + (ADJ[s.value]?.dx ?? 0);
+          const cy = s.ly + (ADJ[s.value]?.dy ?? 0);
+          const r = (18 + Math.min(count, 10) * 1.6) * (on ? 1.12 : 1);
           return (
             <g
-              key={s.value + "-label"}
-              className="pointer-events-none select-none"
+              key={s.value + "-b"}
+              className="cursor-pointer"
+              onMouseEnter={() => setHovered(s.value)}
+              onMouseLeave={() => setHovered(null)}
+              onClick={() => handle(s.value)}
             >
+              <circle
+                cx={cx}
+                cy={cy}
+                r={r}
+                fill={tier(count).bubble}
+                stroke={on ? "#60a5fa" : "#ffffff"}
+                strokeWidth={on ? 3.5 : 2.5}
+                filter="url(#bubbleShadow)"
+              />
               <text
-                x={x}
-                y={y}
+                x={cx}
+                y={cy}
                 textAnchor="middle"
-                fontSize={cfg.fs}
+                dominantBaseline="central"
+                fontSize={r * 0.9}
+                fontWeight="800"
+                fill="#ffffff"
+              >
+                {count}
+              </text>
+              <text
+                x={cx}
+                y={cy + r + 15}
+                textAnchor="middle"
+                fontSize="16.5"
                 fontWeight="700"
-                fill="#1e293b"
+                fill="#334155"
                 stroke="#ffffff"
-                strokeWidth="3"
+                strokeWidth="3.2"
                 paintOrder="stroke"
               >
                 {DISTRICT_MAP[s.value].label}
-              </text>
-              <text
-                x={x}
-                y={y + cfg.fs * 0.95}
-                textAnchor="middle"
-                fontSize={Math.max(11, cfg.fs * 0.78)}
-                fontWeight="600"
-                fill="#475569"
-                stroke="#ffffff"
-                strokeWidth="2.5"
-                paintOrder="stroke"
-              >
-                {count}건
               </text>
             </g>
           );
