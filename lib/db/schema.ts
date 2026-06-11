@@ -121,3 +121,16 @@ export const issues = pgTable("issues", {
 });
 
 export type IssueRow = typeof issues.$inferSelect;
+
+// 업로드 이미지 저장소 (Neon에 base64로 보관, /api/images/[id]로 서빙).
+// events 행을 가볍게 유지하려고 별도 테이블에 둔다.
+export const images = pgTable("images", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  mimeType: text("mime_type").notNull(),
+  data: text("data").notNull(), // base64
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type ImageRow = typeof images.$inferSelect;

@@ -1,6 +1,5 @@
 "use server";
 
-import { put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
@@ -10,6 +9,7 @@ import {
   deleteEvent,
   updateEvent,
 } from "@/lib/data/events";
+import { createImage } from "@/lib/data/images";
 import { setSubmissionStatus } from "@/lib/data/submissions";
 import {
   CATEGORY_MAP,
@@ -103,7 +103,9 @@ function parseEvent(formData: FormData): EventInput | string {
   };
 }
 
-// 새 이미지 파일이 있으면 Vercel Blob에 업로드하고 URL을 반환한다.
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // 4MB
+
+// 새 이미지 파일이 있으면 Neon(images 테이블)에 저장하고 서빙 경로를 반환한다.
 // 파일이 없으면 null(=기존 imageUrl 유지). 실패 시 throw.
 async function maybeUploadImage(formData: FormData): Promise<string | null> {
   const file = formData.get("imageFile");
@@ -111,14 +113,12 @@ async function maybeUploadImage(formData: FormData): Promise<string | null> {
   if (!file.type.startsWith("image/")) {
     throw new Error("이미지 파일만 업로드할 수 있습니다.");
   }
-  const ext = file.name.includes(".")
-    ? file.name.split(".").pop()!.toLowerCase()
-    : "img";
-  const blob = await put(`events/${crypto.randomUUID()}.${ext}`, file, {
-    access: "public",
-    contentType: file.type,
-  });
-  return blob.url;
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new Error("이미지는 4MB 이하만 업로드할 수 있습니다.");
+  }
+  const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
+  const id = await createImage(file.type, base64);
+  return `/api/images/${id}`;
 }
 
 function revalidateAll(id?: string) {
@@ -143,7 +143,7 @@ export async function createEventAction(
     return {
       error:
         "이미지 업로드 실패: " +
-        (e instanceof Error ? e.message : "스토리지(Blob) 설정을 확인하세요."),
+        (e instanceof Error ? e.message : "잠시 후 다시 시도해 주세요."),
     };
   }
   await createEvent(parsed);
@@ -172,7 +172,7 @@ export async function updateEventAction(
     return {
       error:
         "이미지 업로드 실패: " +
-        (e instanceof Error ? e.message : "스토리지(Blob) 설정을 확인하세요."),
+        (e instanceof Error ? e.message : "잠시 후 다시 시도해 주세요."),
     };
   }
   const updated = await updateEvent(id, parsed);
