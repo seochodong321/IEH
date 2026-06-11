@@ -49,12 +49,14 @@ async function main() {
     updatedAt: new Date(e.updatedAt),
   }));
 
-  // 충돌 시 id 제외 모든 컬럼을 EXCLUDED로 갱신 (멀티행 upsert)
-  // ⚠️ likes도 시드값으로 덮어쓰므로 실제 좋아요가 쌓인 뒤엔 재시드 주의.
+  // 충돌(이미 있는 행) 시 EXCLUDED로 갱신하되, 아래 컬럼은 보존한다.
+  // - likes: 실제 누적된 좋아요를 시드값으로 덮어쓰지 않기 위함(데이터 유실 방지)
+  // - createdAt: 최초 등록 시각 유지
+  const PRESERVE_ON_CONFLICT = new Set(["id", "likes", "createdAt"]);
   const eCols = getTableColumns(events);
   const eventSet = Object.fromEntries(
     Object.entries(eCols)
-      .filter(([key]) => key !== "id")
+      .filter(([key]) => !PRESERVE_ON_CONFLICT.has(key))
       .map(([key, col]) => [key, sql.raw(`excluded."${col.name}"`)]),
   );
 

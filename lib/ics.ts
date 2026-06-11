@@ -19,6 +19,31 @@ function dateOnly(d: string): string {
   return d.replace(/-/g, "");
 }
 
+// RFC 5545 §3.1: 콘텐츠 라인은 75옥텟 이하로 접는다(이어지는 줄은 공백 1칸으로 시작).
+// 옥텟(UTF-8 바이트) 기준으로 자르되, 멀티바이트 문자는 코드포인트 단위로 순회해 쪼개지지 않게 한다.
+function foldLine(line: string): string {
+  const enc = new TextEncoder();
+  if (enc.encode(line).length <= 75) return line;
+  const chunks: string[] = [];
+  let cur = "";
+  let curBytes = 0;
+  for (const ch of line) {
+    const chBytes = enc.encode(ch).length;
+    // 첫 줄은 75옥텟, 이어지는 줄은 선행 공백 1칸 포함 75 → 콘텐츠 74옥텟
+    const limit = chunks.length === 0 ? 75 : 74;
+    if (curBytes + chBytes > limit) {
+      chunks.push(cur);
+      cur = ch;
+      curBytes = chBytes;
+    } else {
+      cur += ch;
+      curBytes += chBytes;
+    }
+  }
+  if (cur) chunks.push(cur);
+  return chunks.join("\r\n ");
+}
+
 // 매주 반복이면 시작일 이후 첫 발생일을 DTSTART로 사용
 function firstOccurrence(e: EventRecord): string {
   if (e.recurrenceType !== "weekly") return e.startDate;
@@ -76,5 +101,5 @@ export function eventToICS(e: EventRecord): string {
   if (e.websiteUrl) lines.push(`URL:${e.websiteUrl}`);
 
   lines.push("END:VEVENT", "END:VCALENDAR");
-  return lines.join("\r\n") + "\r\n";
+  return lines.map(foldLine).join("\r\n") + "\r\n";
 }
