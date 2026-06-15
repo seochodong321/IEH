@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Building2,
   CalendarDays,
-  CalendarPlus,
   Clock,
   ExternalLink,
   Home,
@@ -25,8 +24,6 @@ import { EventThumb } from "@/components/event-thumb";
 import { ShareButton } from "@/components/share-button";
 import { LikeButton } from "@/components/like-button";
 import { ReportIssueButton } from "@/components/report-issue-button";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { getEventById } from "@/lib/data/events";
 import { DISTRICT_MAP, INDOOR_OUTDOOR_MAP } from "@/lib/constants";
 import { formatDate, formatDateRange, recurrenceLabel } from "@/lib/event-utils";
@@ -69,13 +66,6 @@ export default async function EventDetailPage({
         </Link>
         <div className="flex items-center gap-2">
           <LikeButton eventId={event.id} initialLikes={event.likes} />
-          <a
-            href={`/events/${event.id}/ics`}
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-          >
-            <CalendarPlus className="size-4" />
-            캘린더 추가
-          </a>
           <ShareButton />
           <ReportIssueButton eventId={event.id} eventTitle={event.title} />
         </div>
