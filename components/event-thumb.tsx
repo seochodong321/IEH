@@ -42,12 +42,21 @@ export function EventThumb({
   return (
     <div
       className={cn(
-        "flex items-center justify-center bg-gradient-to-br text-white",
+        "relative flex items-center justify-center overflow-hidden bg-gradient-to-br text-white",
         gradient,
         className,
       )}
     >
-      <Icon className={cn("size-6 text-white/90", iconClassName)} />
+      {/* 비어 보이지 않게 카테고리 아이콘을 큰 워터마크로 겹쳐 깊이감을 준다 */}
+      <Icon
+        aria-hidden
+        className="absolute -right-4 -bottom-5 h-2/3 w-2/3 rotate-12 text-white/15"
+      />
+      <Icon
+        aria-hidden
+        className="absolute -top-4 -left-5 h-1/3 w-1/3 -rotate-12 text-white/10"
+      />
+      <Icon className={cn("relative size-6 text-white/95", iconClassName)} />
     </div>
   );
 }

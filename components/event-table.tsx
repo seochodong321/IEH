@@ -33,21 +33,23 @@ export function EventTable({ events }: { events: EventRecord[] }) {
           <TableRow className="hover:bg-transparent">
             <TableHead className="pl-4">행사명</TableHead>
             <TableHead>유형</TableHead>
-            <TableHead>시작일</TableHead>
-            <TableHead>종료일</TableHead>
-            <TableHead>장소</TableHead>
-            <TableHead>권역</TableHead>
-            <TableHead>주최</TableHead>
-            <TableHead>주관</TableHead>
+            <TableHead className="hidden sm:table-cell">시작일</TableHead>
+            <TableHead className="hidden lg:table-cell">종료일</TableHead>
+            <TableHead className="hidden md:table-cell">장소</TableHead>
+            <TableHead className="hidden sm:table-cell">권역</TableHead>
+            <TableHead className="hidden xl:table-cell">주최</TableHead>
+            <TableHead className="hidden xl:table-cell">주관</TableHead>
             <TableHead>상태</TableHead>
-            <TableHead className="pr-4 text-center">주요</TableHead>
+            <TableHead className="hidden pr-4 text-center sm:table-cell">
+              주요
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {events.map((e) => (
             <TableRow
               key={e.id}
-              className="cursor-pointer"
+              className="cursor-pointer hover:bg-muted"
               onClick={() => router.push(`/events/${e.id}`)}
             >
               <TableCell className="max-w-[240px] pl-4 font-medium">
@@ -62,24 +64,28 @@ export function EventTable({ events }: { events: EventRecord[] }) {
               <TableCell>
                 <CategoryBadge value={e.category} />
               </TableCell>
-              <TableCell className="text-muted-foreground">
+              <TableCell className="hidden text-muted-foreground sm:table-cell">
                 {formatDate(e.startDate)}
               </TableCell>
-              <TableCell className="text-muted-foreground">
+              <TableCell className="hidden text-muted-foreground lg:table-cell">
                 {formatDate(e.endDate)}
               </TableCell>
-              <TableCell className="max-w-[180px] truncate">{e.venue}</TableCell>
-              <TableCell>{DISTRICT_MAP[e.district].label}</TableCell>
-              <TableCell className="max-w-[140px] truncate text-muted-foreground">
+              <TableCell className="hidden max-w-[180px] truncate md:table-cell">
+                {e.venue}
+              </TableCell>
+              <TableCell className="hidden sm:table-cell">
+                {DISTRICT_MAP[e.district].label}
+              </TableCell>
+              <TableCell className="hidden max-w-[140px] truncate text-muted-foreground xl:table-cell">
                 {e.organizer}
               </TableCell>
-              <TableCell className="max-w-[140px] truncate text-muted-foreground">
+              <TableCell className="hidden max-w-[140px] truncate text-muted-foreground xl:table-cell">
                 {e.host}
               </TableCell>
               <TableCell>
                 <StatusBadge startDate={e.startDate} endDate={e.endDate} />
               </TableCell>
-              <TableCell className="pr-4 text-center">
+              <TableCell className="hidden pr-4 text-center sm:table-cell">
                 {e.isFeatured ? (
                   <Star className="mx-auto size-4 fill-amber-400 text-amber-400" />
                 ) : (

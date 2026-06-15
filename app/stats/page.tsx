@@ -23,6 +23,7 @@ export const metadata = { title: "통계 현황" };
 export default async function StatsPage() {
   const today = todayKST();
   const year = Number(today.slice(0, 4));
+  const curMonth = Number(today.slice(5, 7));
   const events = await getAllEvents();
 
   let ongoing = 0;
@@ -123,21 +124,41 @@ export default async function StatsPage() {
 
       <Panel title={`월별 행사 (${year}년 · 시작월 기준)`}>
         <div className="flex h-44 gap-1.5">
-          {months.map((m) => (
-            <div key={m.m} className="flex flex-1 flex-col items-center gap-1">
-              <span className="h-3 text-[10px] tabular-nums text-muted-foreground">
-                {m.count > 0 ? m.count : ""}
-              </span>
-              <div className="flex w-full flex-1 items-end">
-                <div
-                  className="w-full rounded-t bg-blue-400/80"
-                  style={{ height: `${(m.count / monthMax) * 100}%` }}
-                />
+          {months.map((m) => {
+            const isCur = m.m === curMonth;
+            return (
+              <div key={m.m} className="flex flex-1 flex-col items-center gap-1">
+                <span className="h-3 text-[10px] tabular-nums text-muted-foreground">
+                  {m.count > 0 ? m.count : ""}
+                </span>
+                {/* 빈 달도 트랙이 보이도록 — 막대 없음 = 0건임을 명확히 */}
+                <div className="flex w-full flex-1 items-end rounded-t bg-muted/50">
+                  <div
+                    className={cn(
+                      "w-full rounded-t",
+                      isCur ? "bg-blue-600" : "bg-blue-400/80",
+                    )}
+                    style={{ height: `${(m.count / monthMax) * 100}%` }}
+                  />
+                </div>
+                <span
+                  className={cn(
+                    "text-[10px]",
+                    isCur
+                      ? "font-semibold text-foreground"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {m.m}월
+                </span>
               </div>
-              <span className="text-[10px] text-muted-foreground">{m.m}월</span>
-            </div>
-          ))}
+            );
+          })}
         </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          막대가 비어 있는 달은 해당 월에 <b>시작하는</b> 행사가 없다는
+          뜻입니다. (여러 달에 걸친 행사는 시작월에만 집계)
+        </p>
       </Panel>
 
       <Panel title="인기 행사 (좋아요순)">

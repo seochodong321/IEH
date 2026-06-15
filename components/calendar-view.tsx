@@ -132,7 +132,7 @@ export function CalendarView({
                 >
                   {day.getDate()}
                 </span>
-                <div className="space-y-0.5">
+                <div className={cn("space-y-0.5", !inMonth && "opacity-45")}>
                   {dayEvents.slice(0, 3).map((e) => (
                     <div
                       key={e.id}
