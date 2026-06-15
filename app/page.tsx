@@ -17,6 +17,7 @@ import { Panel } from "@/components/panel";
 import { getAllEvents } from "@/lib/data/events";
 import {
   compareByStatus,
+  computeStatus,
   getStats,
   monthRange,
   todayKST,
@@ -34,8 +35,13 @@ export default async function DashboardPage() {
   const week = weekRange(today);
   const month = monthRange(today);
 
+  // 주요 행사 패널: 종료된 축제는 빼고 진행 중·예정만 가까운 순서로 노출
+  // (종료되면 자동으로 밀려나고 다음 주요 축제가 올라온다)
   const featured = events
-    .filter((e) => e.isFeatured)
+    .filter(
+      (e) =>
+        e.isFeatured && computeStatus(e.startDate, e.endDate, today) !== "ended",
+    )
     .sort((a, b) => compareByStatus(a, b, today))
     .slice(0, 5);
 
