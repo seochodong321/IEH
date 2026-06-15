@@ -2,15 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { BarChart3, Map as MapIcon } from "lucide-react";
-import { RegionBars } from "@/components/region-bars";
+import { RegionBars, RegionLegend } from "@/components/region-bars";
 import { RegionMap } from "@/components/region-map";
-import { districtCounts, REGION_LEGEND } from "@/lib/region";
+import { districtCounts } from "@/lib/region";
 import { cn } from "@/lib/utils";
-import type { EventRecord } from "@/lib/types";
+import type { EventSummary } from "@/lib/types";
 
 type View = "map" | "bar";
 
-export function RegionDistributionPanel({ events }: { events: EventRecord[] }) {
+export function RegionDistributionPanel({ events }: { events: EventSummary[] }) {
   const [view, setView] = useState<View>("map");
   const counts = useMemo(() => districtCounts(events), [events]);
 
@@ -50,14 +50,7 @@ export function RegionDistributionPanel({ events }: { events: EventRecord[] }) {
         )}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 border-t pt-3 text-[11px] text-muted-foreground">
-        {REGION_LEGEND.map((l) => (
-          <span key={l.label} className="flex items-center gap-1">
-            <span className={cn("size-2 rounded-full", l.fill)} />
-            {l.label}
-          </span>
-        ))}
-      </div>
+      <RegionLegend />
     </section>
   );
 }

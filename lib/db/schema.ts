@@ -73,7 +73,6 @@ export const events = pgTable("events", {
 });
 
 export type EventRow = typeof events.$inferSelect;
-export type NewEventRow = typeof events.$inferInsert;
 
 export const submissionStatusEnum = pgEnum("submission_status", [
   "pending",
@@ -103,7 +102,6 @@ export const submissions = pgTable("submissions", {
 });
 
 export type SubmissionRow = typeof submissions.$inferSelect;
-export type NewSubmissionRow = typeof submissions.$inferInsert;
 
 export const issueStatusEnum = pgEnum("issue_status", ["open", "resolved"]);
 
@@ -132,5 +130,3 @@ export const images = pgTable("images", {
     .notNull()
     .defaultNow(),
 });
-
-export type ImageRow = typeof images.$inferSelect;

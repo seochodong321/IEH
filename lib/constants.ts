@@ -22,15 +22,10 @@ export const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string }[] = [
 export interface Option<T extends string> {
   value: T;
   label: string;
-  /** 뱃지/칩 배경+글자 색 */
-  badgeClass: string;
-  /** 캘린더 점/막대 색 */
-  dotClass: string;
-}
-
-export interface DistrictOption extends Option<District> {
-  /** 행정 구분: 구 / 군 */
-  group: "구" | "군";
+  /** 뱃지/칩 배경+글자 색 (색이 필요한 분류에만) */
+  badgeClass?: string;
+  /** 캘린더 점/막대 색 (색이 필요한 분류에만) */
+  dotClass?: string;
 }
 
 export const CATEGORIES: Option<Category>[] = [
@@ -73,20 +68,20 @@ export const CATEGORIES: Option<Category>[] = [
 ];
 
 // 인천 2군 9구 (2026년 7월 행정체제 개편 기준)
-export const DISTRICTS: DistrictOption[] = [
+export const DISTRICTS: Option<District>[] = [
   // 9구
-  { value: "jemulpo", label: "제물포구", group: "구", badgeClass: "", dotClass: "" },
-  { value: "yeongjong", label: "영종구", group: "구", badgeClass: "", dotClass: "" },
-  { value: "michuhol", label: "미추홀구", group: "구", badgeClass: "", dotClass: "" },
-  { value: "yeonsu", label: "연수구", group: "구", badgeClass: "", dotClass: "" },
-  { value: "namdong", label: "남동구", group: "구", badgeClass: "", dotClass: "" },
-  { value: "bupyeong", label: "부평구", group: "구", badgeClass: "", dotClass: "" },
-  { value: "gyeyang", label: "계양구", group: "구", badgeClass: "", dotClass: "" },
-  { value: "seo", label: "서해구", group: "구", badgeClass: "", dotClass: "" },
-  { value: "geomdan", label: "검단구", group: "구", badgeClass: "", dotClass: "" },
+  { value: "jemulpo", label: "제물포구" },
+  { value: "yeongjong", label: "영종구" },
+  { value: "michuhol", label: "미추홀구" },
+  { value: "yeonsu", label: "연수구" },
+  { value: "namdong", label: "남동구" },
+  { value: "bupyeong", label: "부평구" },
+  { value: "gyeyang", label: "계양구" },
+  { value: "seo", label: "서해구" },
+  { value: "geomdan", label: "검단구" },
   // 2군
-  { value: "ganghwa", label: "강화군", group: "군", badgeClass: "", dotClass: "" },
-  { value: "ongjin", label: "옹진군", group: "군", badgeClass: "", dotClass: "" },
+  { value: "ganghwa", label: "강화군" },
+  { value: "ongjin", label: "옹진군" },
 ];
 
 export const STATUSES: Option<EventStatus>[] = [
@@ -111,9 +106,9 @@ export const STATUSES: Option<EventStatus>[] = [
 ];
 
 export const INDOOR_OUTDOOR: Option<IndoorOutdoor>[] = [
-  { value: "indoor", label: "실내", badgeClass: "", dotClass: "" },
-  { value: "outdoor", label: "실외", badgeClass: "", dotClass: "" },
-  { value: "mixed", label: "혼합", badgeClass: "", dotClass: "" },
+  { value: "indoor", label: "실내" },
+  { value: "outdoor", label: "실외" },
+  { value: "mixed", label: "혼합" },
 ];
 
 export const ORG_TYPES: Option<OrgType>[] = [

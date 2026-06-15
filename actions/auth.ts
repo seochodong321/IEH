@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import {
   SESSION_COOKIE,
   getAdminPassword,
+  safeEqual,
   sessionToken,
 } from "@/lib/auth";
 
@@ -17,7 +18,7 @@ export async function login(
   const password = String(formData.get("password") ?? "");
   const from = String(formData.get("from") ?? "/admin");
 
-  if (password !== getAdminPassword()) {
+  if (!safeEqual(password, getAdminPassword())) {
     return { error: "비밀번호가 올바르지 않습니다." };
   }
 

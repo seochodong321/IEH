@@ -18,7 +18,10 @@ export function LikeButton({
   const [liked, setLiked] = useState(false);
   const [pending, startTransition] = useTransition();
 
+  // 서버에는 좋아요 여부 정보가 없어 첫 렌더는 항상 false → 마운트 후 보정.
+  // (하이드레이션 불일치를 피하려는 의도된 effect-setState 패턴)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLiked(localStorage.getItem(`liked:${eventId}`) === "1");
   }, [eventId]);
 

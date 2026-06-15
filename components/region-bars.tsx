@@ -1,7 +1,21 @@
 import { DISTRICTS } from "@/lib/constants";
-import { regionTier } from "@/lib/region";
+import { regionTier, REGION_TIERS } from "@/lib/region";
 import { cn } from "@/lib/utils";
 import type { District } from "@/lib/types";
+
+/** 건수 구간 색상 범례 (지도/그래프 패널 공통) */
+export function RegionLegend() {
+  return (
+    <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 border-t pt-3 text-[11px] text-muted-foreground">
+      {REGION_TIERS.map((t) => (
+        <span key={t.label} className="flex items-center gap-1">
+          <span className={cn("size-2 rounded-full", t.fill)} />
+          {t.label}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export function RegionBars({ counts }: { counts: Record<District, number> }) {
   const rows = DISTRICTS.map((d) => ({

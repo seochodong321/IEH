@@ -83,6 +83,21 @@ export type EventInput = Omit<
   "id" | "createdAt" | "updatedAt" | "likes"
 >;
 
+// 캘린더·지도 등 클라이언트 컴포넌트로 넘기는 경량 행사 모델.
+// 설명·연락처 등 화면에 안 쓰는 필드를 빼서 RSC 페이로드를 줄인다.
+export type EventSummary = Pick<
+  EventRecord,
+  | "id"
+  | "title"
+  | "category"
+  | "district"
+  | "venue"
+  | "startDate"
+  | "endDate"
+  | "recurrenceType"
+  | "recurrenceDays"
+>;
+
 // ── 제보(시민/실무자 제출 → 관리자 검토) ──
 export type SubmissionStatus = "pending" | "approved" | "rejected";
 

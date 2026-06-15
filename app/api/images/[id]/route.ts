@@ -1,7 +1,5 @@
 import { getImage } from "@/lib/data/images";
-
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { UUID_RE } from "@/lib/utils";
 
 // 업로드 이미지 서빙. id가 불변(업로드마다 새 id)이라 장기 캐시가 안전하다.
 export async function GET(
@@ -23,6 +21,9 @@ export async function GET(
       "Content-Type": img.mimeType,
       "Content-Length": String(bytes.length),
       "Cache-Control": "public, max-age=31536000, immutable",
+      // 저장된 MIME 그대로 서빙하므로, 브라우저가 다른 타입으로 추측·실행하지 못하게 막는다
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "default-src 'none'",
     },
   });
 }

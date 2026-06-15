@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { getSubmissions } from "@/lib/data/submissions";
 import { ReportReviewActions } from "@/components/report-review-actions";
 import { CategoryBadge } from "@/components/event-badges";
-import { CATEGORY_MAP, DISTRICT_MAP } from "@/lib/constants";
+import { DISTRICT_MAP } from "@/lib/constants";
 import { formatDate, formatDateRange } from "@/lib/event-utils";
 
 export const dynamic = "force-dynamic";

@@ -4,7 +4,6 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -13,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Field, SelectField } from "@/components/form-field";
 import {
   CATEGORIES,
   DISTRICTS,
@@ -85,10 +85,6 @@ export function EventForm({
 
   return (
     <form action={formAction} className="space-y-5">
-      <input type="hidden" name="category" value={category} />
-      <input type="hidden" name="district" value={district} />
-      <input type="hidden" name="indoorOutdoor" value={indoorOutdoor} />
-      <input type="hidden" name="orgType" value={orgType} />
       <input type="hidden" name="recurrenceType" value={recurrenceType} />
       <input
         type="hidden"
@@ -110,43 +106,23 @@ export function EventForm({
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="행사유형" required>
-          <Select
-            items={categoryItems}
-            value={category}
-            onValueChange={(v) => setCategory(String(v) as Category)}
-          >
-            <SelectTrigger className="h-9 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CATEGORIES.map((c) => (
-                <SelectItem key={c.value} value={c.value}>
-                  {c.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <SelectField
+          label="행사유형"
+          name="category"
+          required
+          items={categoryItems}
+          value={category}
+          onChange={(v) => setCategory(v as Category)}
+        />
 
-        <Field label="권역" required>
-          <Select
-            items={districtItems}
-            value={district}
-            onValueChange={(v) => setDistrict(String(v) as District)}
-          >
-            <SelectTrigger className="h-9 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DISTRICTS.map((d) => (
-                <SelectItem key={d.value} value={d.value}>
-                  {d.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <SelectField
+          label="권역"
+          name="district"
+          required
+          items={districtItems}
+          value={district}
+          onChange={(v) => setDistrict(v as District)}
+        />
 
         <Field label="시작일" htmlFor="startDate" required>
           <Input
@@ -250,43 +226,23 @@ export function EventForm({
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="주최 구분" required>
-          <Select
-            items={orgTypeItems}
-            value={orgType}
-            onValueChange={(v) => setOrgType(String(v) as OrgType)}
-          >
-            <SelectTrigger className="h-9 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ORG_TYPES.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <SelectField
+          label="주최 구분"
+          name="orgType"
+          required
+          items={orgTypeItems}
+          value={orgType}
+          onChange={(v) => setOrgType(v as OrgType)}
+        />
 
-        <Field label="실내/실외" required>
-          <Select
-            items={indoorItems}
-            value={indoorOutdoor}
-            onValueChange={(v) => setIndoorOutdoor(String(v) as IndoorOutdoor)}
-          >
-            <SelectTrigger className="h-9 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {INDOOR_OUTDOOR.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <SelectField
+          label="실내/실외"
+          name="indoorOutdoor"
+          required
+          items={indoorItems}
+          value={indoorOutdoor}
+          onChange={(v) => setIndoorOutdoor(v as IndoorOutdoor)}
+        />
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -364,11 +320,11 @@ export function EventForm({
           id="imageFile"
           name="imageFile"
           type="file"
-          accept="image/*"
+          accept="image/png,image/jpeg,image/webp,image/gif"
           className="block w-full cursor-pointer text-sm text-muted-foreground file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-muted/70"
         />
         <p className="mt-1 text-xs text-muted-foreground">
-          JPG·PNG 등 이미지 파일 업로드. 비우면 카테고리 색 썸네일로 표시됩니다.
+          PNG·JPG·WebP·GIF 이미지 업로드. 비우면 카테고리 색 썸네일로 표시됩니다.
         </p>
       </Field>
 
@@ -395,27 +351,5 @@ export function EventForm({
         </Button>
       </div>
     </form>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  required,
-  children,
-}: {
-  label: string;
-  htmlFor?: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={htmlFor}>
-        {label}
-        {required ? <span className="ml-0.5 text-destructive">*</span> : null}
-      </Label>
-      {children}
-    </div>
   );
 }

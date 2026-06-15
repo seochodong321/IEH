@@ -7,6 +7,7 @@ import {
   deleteIssue,
   setIssueStatus,
 } from "@/lib/data/issues";
+import { UUID_RE } from "@/lib/utils";
 
 export type IssueState = { ok?: boolean; error?: string };
 
@@ -20,7 +21,8 @@ export async function reportIssue(
   const eventTitle = get("eventTitle");
   const message = get("message");
 
-  if (!eventId || !eventTitle) return { error: "잘못된 요청입니다." };
+  // eventId 는 클라이언트가 보내는 값 — uuid 컬럼 캐스트 오류(500) 방지
+  if (!UUID_RE.test(eventId) || !eventTitle) return { error: "잘못된 요청입니다." };
   if (!message) return { error: "신고 내용을 입력하세요." };
 
   await createIssue({

@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import * as schema from "./schema";
 
 // Vercel의 Neon 연동은 DATABASE_URL(또는 POSTGRES_URL)을 자동 주입한다.
-export function getDatabaseUrl(): string | undefined {
+function getDatabaseUrl(): string | undefined {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL || undefined;
 }
 

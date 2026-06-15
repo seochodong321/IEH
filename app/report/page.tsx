@@ -1,9 +1,7 @@
 import { ReportForm } from "@/components/report-form";
 
-export const dynamic = "force-dynamic";
-
 export const metadata = {
-  title: "행사 제보하기 · 인천 행사 상황판",
+  title: "행사 제보하기",
   description: "인천에서 열리는 행사·축제 정보를 제보해 주세요. 검토 후 게시됩니다.",
 };
 

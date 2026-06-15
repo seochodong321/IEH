@@ -16,6 +16,8 @@ import type {
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "행사 목록" };
+
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function EventsPage({

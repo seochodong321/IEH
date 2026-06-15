@@ -16,7 +16,11 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import { CategoryBadge, StatusBadge } from "@/components/event-badges";
+import {
+  CategoryBadge,
+  OrgTypeBadge,
+  StatusBadge,
+} from "@/components/event-badges";
 import { EventThumb } from "@/components/event-thumb";
 import { ShareButton } from "@/components/share-button";
 import { LikeButton } from "@/components/like-button";
@@ -24,11 +28,7 @@ import { ReportIssueButton } from "@/components/report-issue-button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventById } from "@/lib/data/events";
-import {
-  DISTRICT_MAP,
-  INDOOR_OUTDOOR_MAP,
-  ORG_TYPE_MAP,
-} from "@/lib/constants";
+import { DISTRICT_MAP, INDOOR_OUTDOOR_MAP } from "@/lib/constants";
 import { formatDate, formatDateRange, recurrenceLabel } from "@/lib/event-utils";
 
 export const dynamic = "force-dynamic";
@@ -40,10 +40,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const event = await getEventById(id);
-  if (!event) return { title: "행사를 찾을 수 없습니다 · 인천 행사 상황판" };
+  if (!event) return { title: "행사를 찾을 수 없습니다" };
   const where = `${DISTRICT_MAP[event.district].label} · ${event.venue}`;
   return {
-    title: `${event.title} · 인천 행사 상황판`,
+    title: event.title,
     description: `${formatDateRange(event.startDate, event.endDate)} · ${where}`,
   };
 }
@@ -91,14 +91,7 @@ export default async function EventDetailPage({
         <div className="p-6">
         <div className="flex flex-wrap items-center gap-2">
           <CategoryBadge value={event.category} />
-          <span
-            className={cn(
-              "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
-              ORG_TYPE_MAP[event.orgType].badgeClass,
-            )}
-          >
-            {ORG_TYPE_MAP[event.orgType].label}
-          </span>
+          <OrgTypeBadge value={event.orgType} />
           <StatusBadge startDate={event.startDate} endDate={event.endDate} />
           {event.isFeatured ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">

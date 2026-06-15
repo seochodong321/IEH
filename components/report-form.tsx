@@ -6,15 +6,8 @@ import { CheckCircle2 } from "lucide-react";
 import { submitReport, type ReportState } from "@/actions/submissions";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Field, SelectField } from "@/components/form-field";
 import { CATEGORIES, DISTRICTS, labelRecord } from "@/lib/constants";
 
 const categoryItems = { none: "미정 / 모름", ...labelRecord(CATEGORIES) };
@@ -60,45 +53,26 @@ export function ReportForm() {
       action={formAction}
       className="space-y-5 rounded-xl bg-card p-6 ring-1 ring-foreground/10"
     >
-      <input type="hidden" name="category" value={category} />
-      <input type="hidden" name="district" value={district} />
-
       <Field label="행사명" htmlFor="title" required>
         <Input id="title" name="title" placeholder="예: 송도 가을 음악회" required />
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="행사유형">
-          <Select items={categoryItems} value={category} onValueChange={(v) => setCategory(String(v))}>
-            <SelectTrigger className="h-9 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">미정 / 모름</SelectItem>
-              {CATEGORIES.map((c) => (
-                <SelectItem key={c.value} value={c.value}>
-                  {c.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <SelectField
+          label="행사유형"
+          name="category"
+          items={categoryItems}
+          value={category}
+          onChange={setCategory}
+        />
 
-        <Field label="권역">
-          <Select items={districtItems} value={district} onValueChange={(v) => setDistrict(String(v))}>
-            <SelectTrigger className="h-9 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">미정 / 모름</SelectItem>
-              {DISTRICTS.map((d) => (
-                <SelectItem key={d.value} value={d.value}>
-                  {d.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <SelectField
+          label="권역"
+          name="district"
+          items={districtItems}
+          value={district}
+          onChange={setDistrict}
+        />
 
         <Field label="시작일" htmlFor="startDate">
           <Input id="startDate" name="startDate" type="date" />
@@ -155,27 +129,5 @@ export function ReportForm() {
         {pending ? "제출 중..." : "제보하기"}
       </Button>
     </form>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  required,
-  children,
-}: {
-  label: string;
-  htmlFor?: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={htmlFor}>
-        {label}
-        {required ? <span className="ml-0.5 text-destructive">*</span> : null}
-      </Label>
-      {children}
-    </div>
   );
 }

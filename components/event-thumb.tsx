@@ -34,13 +34,9 @@ export function EventThumb({
   const { icon: Icon, gradient } = META[category];
   if (imageUrl) {
     // 내부 도구이므로 외부 이미지를 next/image 설정 없이 단순 표시한다.
-    // eslint-disable-next-line @next/next/no-img-element
     return (
-      <img
-        src={imageUrl}
-        alt=""
-        className={cn("object-cover", className)}
-      />
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={imageUrl} alt="" className={cn("object-cover", className)} />
     );
   }
   return (

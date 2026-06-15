@@ -4,14 +4,14 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, MapPin, Repeat } from "lucide-react";
 import { RegionMap } from "@/components/region-map";
+import { RegionLegend } from "@/components/region-bars";
 import { CategoryBadge, StatusBadge } from "@/components/event-badges";
-import { districtCounts, REGION_LEGEND } from "@/lib/region";
+import { districtCounts } from "@/lib/region";
 import { DISTRICT_MAP } from "@/lib/constants";
 import { formatDateRange, recurrenceLabel } from "@/lib/event-utils";
-import { cn } from "@/lib/utils";
-import type { District, EventRecord } from "@/lib/types";
+import type { District, EventSummary } from "@/lib/types";
 
-export function MapExplorer({ events }: { events: EventRecord[] }) {
+export function MapExplorer({ events }: { events: EventSummary[] }) {
   const counts = useMemo(() => districtCounts(events), [events]);
   const [selected, setSelected] = useState<District | null>(null);
 
@@ -34,14 +34,7 @@ export function MapExplorer({ events }: { events: EventRecord[] }) {
           selected={selected}
           onSelect={(d) => setSelected((s) => (s === d ? null : d))}
         />
-        <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 border-t pt-3 text-[11px] text-muted-foreground">
-          {REGION_LEGEND.map((l) => (
-            <span key={l.label} className="flex items-center gap-1">
-              <span className={cn("size-2 rounded-full", l.fill)} />
-              {l.label}
-            </span>
-          ))}
-        </div>
+        <RegionLegend />
       </div>
 
       {/* 선택 권역 행사 */}

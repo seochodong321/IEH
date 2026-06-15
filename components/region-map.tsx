@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DISTRICT_MAP } from "@/lib/constants";
 import { DISTRICT_SHAPES, MAP_H, MAP_W } from "@/lib/incheon-geo";
+import { regionTier } from "@/lib/region";
 import type { District } from "@/lib/types";
 
 // 모던 버블맵: 행정경계는 차분한 배경(연한 회색 + 얇은 경계),
@@ -17,13 +18,9 @@ const ADJ: Partial<Record<District, { dx?: number; dy?: number }>> = {
   seo: { dy: 6 },
 };
 
-// 건수 → 버블 색 (hex). lib/region.ts 의 regionTier / 범례와 같은 계열.
+// 건수 → 버블 색. 0건만 회색, 나머지는 공용 티어 표를 따른다.
 function bubbleColor(count: number): string {
-  if (count >= 10) return "#7c3aed"; // violet-600
-  if (count >= 5) return "#4f46e5"; // indigo-600
-  if (count >= 2) return "#3b82f6"; // blue-500
-  if (count >= 1) return "#38bdf8"; // sky-400
-  return "#cbd5e1"; // slate-300 (0건)
+  return count === 0 ? "#cbd5e1" : regionTier(count).hex;
 }
 
 const LAND = "#e9eef4"; // 차분한 배경 땅

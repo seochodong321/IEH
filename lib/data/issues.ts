@@ -1,12 +1,13 @@
 import "server-only";
 
-import { desc, eq } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/lib/db/client";
 import { issues as table, type IssueRow } from "@/lib/db/schema";
+import { toIso } from "@/lib/utils";
 import type { EventIssue, IssueInput, IssueStatus } from "@/lib/types";
 
 // DB가 없을 때(시드 모드) 사용하는 인메모리 저장소 (재시작 시 초기화).
-let memory: EventIssue[] = [];
+const memory: EventIssue[] = [];
 
 function rowToRecord(r: IssueRow): EventIssue {
   return {
@@ -16,8 +17,7 @@ function rowToRecord(r: IssueRow): EventIssue {
     message: r.message,
     reporterContact: r.reporterContact,
     status: r.status,
-    createdAt:
-      r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    createdAt: toIso(r.createdAt),
   };
 }
 
@@ -36,7 +36,14 @@ export async function getIssues(status?: IssueStatus): Promise<EventIssue[]> {
 }
 
 export async function getOpenIssueCount(): Promise<number> {
-  return (await getIssues("open")).length;
+  if (hasDatabase()) {
+    const [row] = await getDb()
+      .select({ n: count() })
+      .from(table)
+      .where(eq(table.status, "open"));
+    return row?.n ?? 0;
+  }
+  return memory.filter((i) => i.status === "open").length;
 }
 
 export async function createIssue(input: IssueInput): Promise<EventIssue> {

@@ -16,20 +16,15 @@ import { EventTable } from "@/components/event-table";
 import { Panel } from "@/components/panel";
 import { getAllEvents } from "@/lib/data/events";
 import {
-  computeStatus,
+  compareByStatus,
   getStats,
   monthRange,
   todayKST,
+  toEventSummary,
   weekRange,
 } from "@/lib/event-utils";
 
 export const dynamic = "force-dynamic";
-
-const statusRank: Record<string, number> = {
-  ongoing: 0,
-  upcoming: 1,
-  ended: 2,
-};
 
 export default async function DashboardPage() {
   const today = todayKST();
@@ -41,17 +36,15 @@ export default async function DashboardPage() {
 
   const featured = events
     .filter((e) => e.isFeatured)
-    .sort(
-      (a, b) =>
-        statusRank[computeStatus(a.startDate, a.endDate, today)] -
-          statusRank[computeStatus(b.startDate, b.endDate, today)] ||
-        a.startDate.localeCompare(b.startDate),
-    )
+    .sort((a, b) => compareByStatus(a, b, today))
     .slice(0, 5);
 
   const recent = [...events]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 6);
+
+  // 캘린더·지역분포 패널엔 경량 모델만 넘긴다 (RSC 페이로드 절감)
+  const summaries = events.map(toEventSummary);
 
   const latestUpdate = events.reduce(
     (max, e) => (e.updatedAt > max ? e.updatedAt : max),
@@ -154,10 +147,10 @@ export default async function DashboardPage() {
         </Panel>
 
         <Panel title="행사 일정 캘린더">
-          <MiniCalendar events={events} today={today} />
+          <MiniCalendar events={summaries} today={today} />
         </Panel>
 
-        <RegionDistributionPanel events={events} />
+        <RegionDistributionPanel events={summaries} />
       </section>
 
       {/* 하단 행사 목록 */}

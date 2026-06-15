@@ -12,17 +12,16 @@ import {
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WEEKDAYS_KO } from "@/lib/constants";
 import { occursOn } from "@/lib/event-utils";
 import { cn } from "@/lib/utils";
-import type { EventRecord } from "@/lib/types";
-
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+import type { EventSummary } from "@/lib/types";
 
 export function MiniCalendar({
   events,
   today,
 }: {
-  events: EventRecord[];
+  events: EventSummary[];
   today: string;
 }) {
   const router = useRouter();
@@ -88,7 +87,7 @@ export function MiniCalendar({
       </div>
 
       <div className="grid grid-cols-7 text-center text-[11px] text-muted-foreground">
-        {WEEKDAYS.map((w, i) => (
+        {WEEKDAYS_KO.map((w, i) => (
           <div
             key={w}
             className={cn(

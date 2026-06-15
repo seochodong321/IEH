@@ -1,9 +1,10 @@
 import "server-only";
 
-import { desc, eq } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/lib/db/client";
 import { submissions as table, type SubmissionRow } from "@/lib/db/schema";
 import { seedSubmissions } from "@/lib/db/seed-data";
+import { toIso } from "@/lib/utils";
 import type {
   EventSubmission,
   SubmissionInput,
@@ -33,8 +34,7 @@ function rowToRecord(r: SubmissionRow): EventSubmission {
     reporterName: r.reporterName,
     reporterContact: r.reporterContact,
     status: r.status,
-    createdAt:
-      r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    createdAt: toIso(r.createdAt),
   };
 }
 
@@ -56,7 +56,14 @@ export async function getSubmissions(
 }
 
 export async function getPendingCount(): Promise<number> {
-  return (await getSubmissions("pending")).length;
+  if (hasDatabase()) {
+    const [row] = await getDb()
+      .select({ n: count() })
+      .from(table)
+      .where(eq(table.status, "pending"));
+    return row?.n ?? 0;
+  }
+  return mem().filter((s) => s.status === "pending").length;
 }
 
 export async function getSubmissionById(

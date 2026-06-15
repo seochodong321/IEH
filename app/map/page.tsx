@@ -1,10 +1,13 @@
 import { MapExplorer } from "@/components/map-explorer";
 import { getAllEvents } from "@/lib/data/events";
+import { toEventSummary } from "@/lib/event-utils";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "지도 보기" };
+
 export default async function MapPage() {
-  const events = await getAllEvents();
+  const events = (await getAllEvents()).map(toEventSummary);
 
   return (
     <div className="space-y-5">

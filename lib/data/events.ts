@@ -1,10 +1,17 @@
 import "server-only";
 
+import { cache } from "react";
 import { eq, sql } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/lib/db/client";
 import { events as eventsTable, type EventRow } from "@/lib/db/schema";
 import { seedEvents } from "@/lib/db/seed-data";
-import { computeStatus, occursInRange } from "@/lib/event-utils";
+import {
+  compareByStatus,
+  computeStatus,
+  occursInRange,
+  todayKST,
+} from "@/lib/event-utils";
+import { toIso } from "@/lib/utils";
 import type { EventFilters, EventInput, EventRecord } from "@/lib/types";
 
 // DB가 없을 때 사용하는 인메모리 저장소.
@@ -39,10 +46,8 @@ function rowToRecord(r: EventRow): EventRecord {
     imageUrl: r.imageUrl,
     isFeatured: r.isFeatured,
     likes: r.likes ?? 0,
-    createdAt:
-      r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
-    updatedAt:
-      r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),
+    createdAt: toIso(r.createdAt),
+    updatedAt: toIso(r.updatedAt),
   };
 }
 
@@ -82,7 +87,11 @@ async function loadAll(): Promise<EventRecord[]> {
 
 // 검색/필터는 두 모드에서 동일하게 동작하도록 메모리에서 적용한다.
 // (내부 조회용 데이터 규모에서는 충분하며, 모드 간 동작 차이를 없앤다.)
-function applyFilters(list: EventRecord[], filters: EventFilters): EventRecord[] {
+function applyFilters(
+  list: EventRecord[],
+  filters: EventFilters,
+  today: string,
+): EventRecord[] {
   let out = list;
   const q = filters.query?.trim().toLowerCase();
   if (q) {
@@ -99,7 +108,7 @@ function applyFilters(list: EventRecord[], filters: EventFilters): EventRecord[]
   if (filters.featured) out = out.filter((e) => e.isFeatured);
   if (filters.status)
     out = out.filter(
-      (e) => computeStatus(e.startDate, e.endDate) === filters.status,
+      (e) => computeStatus(e.startDate, e.endDate, today) === filters.status,
     );
   // 기간 필터: 지정 구간 안에 실제 발생일이 있는 행사만 (반복 패턴 고려)
   if (filters.from || filters.to) {
@@ -109,29 +118,25 @@ function applyFilters(list: EventRecord[], filters: EventFilters): EventRecord[]
   }
   // 종료 행사 숨김: includeEnded가 명시적으로 false이고 상태 필터가 없을 때만
   if (filters.includeEnded === false && !filters.status) {
-    out = out.filter((e) => computeStatus(e.startDate, e.endDate) !== "ended");
+    out = out.filter(
+      (e) => computeStatus(e.startDate, e.endDate, today) !== "ended",
+    );
   }
   return out;
 }
 
-const STATUS_RANK: Record<string, number> = {
-  ongoing: 0,
-  upcoming: 1,
-  ended: 2,
-};
-
-function sortEvents(list: EventRecord[], sort: EventFilters["sort"]) {
+function sortEvents(
+  list: EventRecord[],
+  sort: EventFilters["sort"],
+  today: string,
+) {
   const byStart = (a: EventRecord, b: EventRecord) =>
     a.startDate.localeCompare(b.startDate) || a.title.localeCompare(b.title);
   if (sort === "created") {
     return list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
   if (sort === "status") {
-    return list.sort(
-      (a, b) =>
-        STATUS_RANK[computeStatus(a.startDate, a.endDate)] -
-          STATUS_RANK[computeStatus(b.startDate, b.endDate)] || byStart(a, b),
-    );
+    return list.sort((a, b) => compareByStatus(a, b, today));
   }
   return list.sort(byStart);
 }
@@ -146,20 +151,25 @@ export async function getEvents(
   filters: EventFilters = {},
 ): Promise<EventRecord[]> {
   const all = await loadAll();
-  return sortEvents(applyFilters(all, filters), filters.sort);
+  // 기준일은 요청당 한 번만 계산 (필터·정렬 전체가 같은 '오늘'을 공유)
+  const today = todayKST();
+  return sortEvents(applyFilters(all, filters, today), filters.sort, today);
 }
 
-export async function getEventById(id: string): Promise<EventRecord | null> {
-  if (hasDatabase()) {
-    const rows = await getDb()
-      .select()
-      .from(eventsTable)
-      .where(eq(eventsTable.id, id))
-      .limit(1);
-    return rows[0] ? rowToRecord(rows[0]) : null;
-  }
-  return mem().find((e) => e.id === id) ?? null;
-}
+/** id 단건 조회. React.cache로 같은 요청 내 중복 호출(메타데이터+페이지)을 1회로 합친다 */
+export const getEventById = cache(
+  async (id: string): Promise<EventRecord | null> => {
+    if (hasDatabase()) {
+      const rows = await getDb()
+        .select()
+        .from(eventsTable)
+        .where(eq(eventsTable.id, id))
+        .limit(1);
+      return rows[0] ? rowToRecord(rows[0]) : null;
+    }
+    return mem().find((e) => e.id === id) ?? null;
+  },
+);
 
 export async function createEvent(input: EventInput): Promise<EventRecord> {
   if (hasDatabase()) {

@@ -29,6 +29,7 @@ import type {
 export type FormState = { error?: string };
 
 const TIME_RE = /^\d{2}:\d{2}$/;
+const URL_RE = /^https?:\/\/\S+$/;
 
 // 성공 시 EventInput, 실패 시 오류 메시지(string)를 반환한다.
 // imageUrl 은 여기서 currentImageUrl(기존값)로 채우고, 새 파일 업로드 시 액션에서 덮어쓴다.
@@ -79,6 +80,11 @@ function parseEvent(formData: FormData): EventInput | string {
   if (!(indoorOutdoor in INDOOR_OUTDOOR_MAP)) return "실내/실외를 선택하세요.";
   if (recurrenceType === "weekly" && recurrenceDays.length === 0)
     return "반복 요일을 하나 이상 선택하세요.";
+  // http(s) 만 허용 — javascript: 링크·ICS 줄바꿈 주입 차단
+  if (websiteUrl && !URL_RE.test(websiteUrl))
+    return "웹사이트 주소는 http(s)로 시작하는 URL이어야 합니다.";
+  if (attachmentUrl && !URL_RE.test(attachmentUrl))
+    return "첨부 주소는 http(s)로 시작하는 URL이어야 합니다.";
 
   return {
     title,
@@ -106,13 +112,21 @@ function parseEvent(formData: FormData): EventInput | string {
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // 4MB
 
+// SVG 는 스크립트 실행이 가능해 제외 — 래스터 포맷만 허용
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
+
 // 새 이미지 파일이 있으면 Neon(images 테이블)에 저장하고 서빙 경로를 반환한다.
 // 파일이 없으면 null(=기존 imageUrl 유지). 실패 시 throw.
 async function maybeUploadImage(formData: FormData): Promise<string | null> {
   const file = formData.get("imageFile");
   if (!(file instanceof File) || file.size === 0) return null;
-  if (!file.type.startsWith("image/")) {
-    throw new Error("이미지 파일만 업로드할 수 있습니다.");
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    throw new Error("PNG·JPEG·WebP·GIF 이미지만 업로드할 수 있습니다.");
   }
   if (file.size > MAX_IMAGE_BYTES) {
     throw new Error("이미지는 4MB 이하만 업로드할 수 있습니다.");
@@ -173,13 +187,14 @@ export async function updateEventAction(
   const parsed = parseEvent(formData);
   if (typeof parsed === "string") return { error: parsed };
   let replacedImageId: string | null = null;
+  let uploadedUrl: string | null = null;
   try {
-    const uploaded = await maybeUploadImage(formData);
-    if (uploaded) {
+    uploadedUrl = await maybeUploadImage(formData);
+    if (uploadedUrl) {
       // 포스터 교체 시 옛 업로드 이미지는 수정 성공 후 삭제 (고아 행 방지)
       const prev = await getEventById(id);
       replacedImageId = uploadedImageId(prev?.imageUrl);
-      parsed.imageUrl = uploaded;
+      parsed.imageUrl = uploadedUrl;
     }
   } catch (e) {
     return {
@@ -189,7 +204,12 @@ export async function updateEventAction(
     };
   }
   const updated = await updateEvent(id, parsed);
-  if (!updated) return { error: "행사를 찾을 수 없습니다." };
+  if (!updated) {
+    // 수정 대상이 사라졌으면 방금 올린 이미지도 정리 (고아 행 방지)
+    const newImageId = uploadedImageId(uploadedUrl);
+    if (newImageId) await deleteImage(newImageId);
+    return { error: "행사를 찾을 수 없습니다." };
+  }
   if (replacedImageId) await deleteImage(replacedImageId);
   revalidateAll(id);
   redirect("/admin");

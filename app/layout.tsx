@@ -16,7 +16,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "인천 행사 상황판",
+  // 각 페이지는 title 문자열만 export 하면 "%s · 인천 행사 상황판" 으로 합쳐진다.
+  title: {
+    default: "인천 행사 상황판",
+    template: "%s · 인천 행사 상황판",
+  },
   description:
     "인천에서 열리는 행사·축제·공연·박람회·체육행사를 한눈에 확인하는 상황판",
 };

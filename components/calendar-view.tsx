@@ -13,18 +13,19 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CategoryBadge, StatusBadge } from "@/components/event-badges";
-import { CATEGORY_MAP, DISTRICT_MAP } from "@/lib/constants";
+import { CATEGORY_MAP, DISTRICT_MAP, WEEKDAYS_KO } from "@/lib/constants";
 import { occursOn } from "@/lib/event-utils";
 import { cn } from "@/lib/utils";
-import type { EventRecord } from "@/lib/types";
+import type { EventSummary } from "@/lib/types";
 
-const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
+// 월요일 시작 그리드에 맞춰 회전 (일요일을 맨 뒤로)
+const WEEKDAYS = [...WEEKDAYS_KO.slice(1), WEEKDAYS_KO[0]];
 
 export function CalendarView({
   events,
   today,
 }: {
-  events: EventRecord[];
+  events: EventSummary[];
   today: string;
 }) {
   const [y, m] = today.split("-").map(Number);
@@ -40,7 +41,7 @@ export function CalendarView({
 
   // 각 날짜(YYYY-MM-DD)에 걸치는 행사 목록
   const byDay = useMemo(() => {
-    const map = new Map<string, EventRecord[]>();
+    const map = new Map<string, EventSummary[]>();
     for (const day of days) {
       const key = format(day, "yyyy-MM-dd");
       map.set(

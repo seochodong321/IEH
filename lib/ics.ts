@@ -121,7 +121,8 @@ export function eventToICS(e: EventRecord): string {
   if (descParts.length) {
     lines.push(`DESCRIPTION:${esc(descParts.join("\n"))}`);
   }
-  if (e.websiteUrl) lines.push(`URL:${e.websiteUrl}`);
+  // URI 값이라 TEXT 이스케이프 대신 줄바꿈만 제거 (ICS 라인 주입 방지)
+  if (e.websiteUrl) lines.push(`URL:${e.websiteUrl.replace(/[\r\n]/g, "")}`);
 
   lines.push("END:VEVENT", "END:VCALENDAR");
   return lines.map(foldLine).join("\r\n") + "\r\n";

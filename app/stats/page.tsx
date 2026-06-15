@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "통계 현황" };
+
 export default async function StatsPage() {
   const today = todayKST();
   const year = Number(today.slice(0, 4));

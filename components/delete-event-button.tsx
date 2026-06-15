@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { deleteEventAction } from "@/actions/events";
 import { Button } from "@/components/ui/button";
+import { useActionRunner } from "@/components/use-action-runner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,21 +25,12 @@ export function DeleteEventButton({
   title: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [pending, startTransition] = useTransition();
-  const router = useRouter();
+  const { pending, run } = useActionRunner();
 
-  const onConfirm = () => {
-    startTransition(async () => {
-      const res = await deleteEventAction(id);
-      if (res?.error) {
-        toast.error(res.error);
-      } else {
-        toast.success("행사를 삭제했습니다.");
-        setOpen(false);
-        router.refresh();
-      }
-    });
-  };
+  const onConfirm = () =>
+    run(() => deleteEventAction(id), "행사를 삭제했습니다.", () =>
+      setOpen(false),
+    );
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>

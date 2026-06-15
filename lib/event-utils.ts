@@ -2,7 +2,13 @@
 // 타임존 문제를 피한다(같은 포맷이면 문자열 비교 = 시간순 비교).
 
 import { WEEKDAYS_KO } from "@/lib/constants";
-import type { EventRecord, EventStatus } from "@/lib/types";
+import type { EventRecord, EventStatus, EventSummary } from "@/lib/types";
+
+// 날짜/반복 계산에 필요한 최소 필드 (EventRecord·EventSummary 모두 충족)
+type Occurrable = Pick<
+  EventRecord,
+  "startDate" | "endDate" | "recurrenceType" | "recurrenceDays"
+>;
 
 /** 인천(Asia/Seoul) 기준 오늘 날짜를 YYYY-MM-DD로 반환 */
 export function todayKST(): string {
@@ -23,14 +29,25 @@ export function computeStatus(
   return "ongoing";
 }
 
-/** 두 날짜 구간이 겹치는지 (양 끝 포함) */
-export function rangesOverlap(
-  aStart: string,
-  aEnd: string,
-  bStart: string,
-  bEnd: string,
-): boolean {
-  return aStart <= bEnd && aEnd >= bStart;
+/** 상태 정렬 우선순위: 진행중 → 예정 → 종료 */
+export const STATUS_RANK: Record<EventStatus, number> = {
+  ongoing: 0,
+  upcoming: 1,
+  ended: 2,
+};
+
+/** 상태순 비교자. 같은 상태면 시작일 → 제목순 */
+export function compareByStatus(
+  a: EventRecord,
+  b: EventRecord,
+  today: string = todayKST(),
+): number {
+  return (
+    STATUS_RANK[computeStatus(a.startDate, a.endDate, today)] -
+      STATUS_RANK[computeStatus(b.startDate, b.endDate, today)] ||
+    a.startDate.localeCompare(b.startDate) ||
+    a.title.localeCompare(b.title)
+  );
 }
 
 /** 날짜 문자열의 요일 (0=일 ... 6=토). UTC 기준으로 계산해 TZ 영향 제거 */
@@ -39,7 +56,7 @@ export function weekdayOf(date: string): number {
 }
 
 /** 특정 날짜에 행사가 실제로 열리는지 (반복 패턴 고려) */
-export function occursOn(event: EventRecord, date: string): boolean {
+export function occursOn(event: Occurrable, date: string): boolean {
   if (date < event.startDate || date > event.endDate) return false;
   if (event.recurrenceType === "weekly") {
     return event.recurrenceDays.includes(weekdayOf(date));
@@ -49,7 +66,7 @@ export function occursOn(event: EventRecord, date: string): boolean {
 
 /** [from, to] 구간 안에 행사 발생일이 하나라도 있는지 (반복 패턴 고려) */
 export function occursInRange(
-  event: EventRecord,
+  event: Occurrable,
   from: string,
   to: string,
 ): boolean {
@@ -68,7 +85,9 @@ export function occursInRange(
 }
 
 /** 반복 표기 라벨. 연속이면 빈 문자열 */
-export function recurrenceLabel(event: EventRecord): string {
+export function recurrenceLabel(
+  event: Pick<EventRecord, "recurrenceType" | "recurrenceDays">,
+): string {
   if (event.recurrenceType !== "weekly" || event.recurrenceDays.length === 0) {
     return "";
   }
@@ -129,6 +148,21 @@ export function monthRange(today: string = todayKST()): {
   return {
     start: `${y}-${pad(m)}-01`,
     end: `${y}-${pad(m)}-${pad(lastDay)}`,
+  };
+}
+
+/** 전체 행사 레코드 → 클라이언트 전송용 경량 모델 (불필요한 필드 제거) */
+export function toEventSummary(e: EventRecord): EventSummary {
+  return {
+    id: e.id,
+    title: e.title,
+    category: e.category,
+    district: e.district,
+    venue: e.venue,
+    startDate: e.startDate,
+    endDate: e.endDate,
+    recurrenceType: e.recurrenceType,
+    recurrenceDays: e.recurrenceDays,
   };
 }
 

@@ -18,7 +18,6 @@ interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  soon?: boolean;
 }
 
 const NAV: NavItem[] = [
@@ -55,39 +54,21 @@ function Logo() {
 function NavLinks({ pathname }: { pathname: string }) {
   return (
     <nav className="flex flex-col gap-1">
-      {NAV.map(({ href, label, icon: Icon, soon }) => {
-        const active = !soon && isActive(pathname, href);
-        if (soon) {
-          return (
-            <span
-              key={href}
-              className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-500"
-              title="준비 중"
-            >
-              <Icon className="size-[18px]" />
-              {label}
-              <span className="ml-auto rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-400">
-                준비중
-              </span>
-            </span>
-          );
-        }
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              active
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-slate-300 hover:bg-white/10 hover:text-white",
-            )}
-          >
-            <Icon className="size-[18px]" />
-            {label}
-          </Link>
-        );
-      })}
+      {NAV.map(({ href, label, icon: Icon }) => (
+        <Link
+          key={href}
+          href={href}
+          className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+            isActive(pathname, href)
+              ? "bg-blue-600 text-white shadow-sm"
+              : "text-slate-300 hover:bg-white/10 hover:text-white",
+          )}
+        >
+          <Icon className="size-[18px]" />
+          {label}
+        </Link>
+      ))}
     </nav>
   );
 }
@@ -128,7 +109,7 @@ export function MobileNav() {
           <span className="text-sm font-semibold">인천 행사 상황판</span>
         </Link>
         <nav className="ml-auto flex items-center gap-1">
-          {NAV.filter((n) => !n.soon).map(({ href, label }) => (
+          {NAV.map(({ href, label }) => (
             <Link
               key={href}
               href={href}

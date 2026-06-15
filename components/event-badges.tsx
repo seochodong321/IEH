@@ -1,9 +1,9 @@
 // 카테고리/상태 표시용 색상 칩. RSC에서도 안전하도록 순수 span 으로 렌더한다.
 
 import { cn } from "@/lib/utils";
-import { CATEGORY_MAP, STATUS_MAP } from "@/lib/constants";
+import { CATEGORY_MAP, ORG_TYPE_MAP, STATUS_MAP } from "@/lib/constants";
 import { computeStatus } from "@/lib/event-utils";
-import type { Category } from "@/lib/types";
+import type { Category, OrgType } from "@/lib/types";
 
 const pill =
   "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap";
@@ -16,6 +16,17 @@ export function CategoryBadge({
   className?: string;
 }) {
   const o = CATEGORY_MAP[value];
+  return <span className={cn(pill, o.badgeClass, className)}>{o.label}</span>;
+}
+
+export function OrgTypeBadge({
+  value,
+  className,
+}: {
+  value: OrgType;
+  className?: string;
+}) {
+  const o = ORG_TYPE_MAP[value];
   return <span className={cn(pill, o.badgeClass, className)}>{o.label}</span>;
 }
 
