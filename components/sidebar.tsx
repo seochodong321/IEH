@@ -75,14 +75,23 @@ function NavLinks({ pathname }: { pathname: string }) {
 
 function Footer() {
   return (
-    <div className="rounded-xl bg-white/5 p-4 text-center ring-1 ring-white/10">
-      <div className="mb-2 flex items-end justify-center gap-1 text-slate-500">
-        <Landmark className="size-4" />
-        <Landmark className="size-6" />
-        <Landmark className="size-5" />
-      </div>
-      <p className="text-sm font-medium text-slate-300">인천광역시</p>
-    </div>
+    <a
+      href="https://www.incheon.go.kr/"
+      target="_blank"
+      rel="noopener noreferrer"
+      title="인천광역시 공식 홈페이지 (새 창)"
+      className="flex items-center justify-center rounded-xl bg-white p-3 ring-1 ring-white/10 transition-opacity hover:opacity-90"
+    >
+      {/* 인천광역시 공식 CI — 짙은 워드마크라 흰 배경 카드 위에 표시 */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/incheon-logo.png"
+        alt="인천광역시"
+        width={273}
+        height={60}
+        className="h-8 w-auto"
+      />
+    </a>
   );
 }
 
