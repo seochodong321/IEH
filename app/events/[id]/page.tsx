@@ -140,31 +140,31 @@ export default async function EventDetailPage({
             )}
           >
             {event.description ? (
-              <div>
+              <div className="min-w-0">
                 <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
                   행사 설명
                 </h2>
-                <p className="leading-relaxed whitespace-pre-wrap">
+                <p className="leading-relaxed break-words whitespace-pre-wrap">
                   {event.description}
                 </p>
               </div>
             ) : null}
             {event.imageUrl ? (
-              <div>
+              <div className="min-w-0">
                 <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-                  포스터
+                  관련 이미지
                 </h2>
                 <a
                   href={event.imageUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  title="포스터 원본 보기 (새 창)"
+                  title="관련 이미지 원본 보기 (새 창)"
                   className="block"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={event.imageUrl}
-                    alt={`${event.title} 포스터`}
+                    alt={`${event.title} 관련 이미지`}
                     className="mx-auto max-h-[32rem] w-auto max-w-full rounded-lg object-contain ring-1 ring-foreground/10 transition-opacity hover:opacity-90"
                   />
                 </a>
