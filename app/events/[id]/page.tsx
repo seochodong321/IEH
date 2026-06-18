@@ -24,6 +24,7 @@ import { EventThumb } from "@/components/event-thumb";
 import { ShareButton } from "@/components/share-button";
 import { LikeButton } from "@/components/like-button";
 import { ReportIssueButton } from "@/components/report-issue-button";
+import { cn } from "@/lib/utils";
 import { getEventById } from "@/lib/data/events";
 import { DISTRICT_MAP, INDOOR_OUTDOOR_MAP } from "@/lib/constants";
 import { formatDate, formatDateRange, recurrenceLabel } from "@/lib/event-utils";
@@ -72,11 +73,11 @@ export default async function EventDetailPage({
       </div>
 
       <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
+        {/* 상단은 카테고리 색 헤더 (포스터는 아래 '행사 설명' 옆에 전체로 표시) */}
         <EventThumb
           category={event.category}
-          imageUrl={event.imageUrl}
-          className="h-40 w-full"
-          iconClassName="size-12"
+          className="h-28 w-full"
+          iconClassName="size-10"
         />
         <div className="p-6">
         <div className="flex flex-wrap items-center gap-2">
@@ -130,14 +131,46 @@ export default async function EventDetailPage({
         </div>
       </div>
 
-      {event.description ? (
+      {event.description || event.imageUrl ? (
         <div className="rounded-xl bg-card p-6 ring-1 ring-foreground/10">
-          <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-            행사 설명
-          </h2>
-          <p className="leading-relaxed whitespace-pre-wrap">
-            {event.description}
-          </p>
+          <div
+            className={cn(
+              "grid items-start gap-6",
+              event.description && event.imageUrl && "md:grid-cols-2",
+            )}
+          >
+            {event.description ? (
+              <div>
+                <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+                  행사 설명
+                </h2>
+                <p className="leading-relaxed whitespace-pre-wrap">
+                  {event.description}
+                </p>
+              </div>
+            ) : null}
+            {event.imageUrl ? (
+              <div>
+                <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+                  포스터
+                </h2>
+                <a
+                  href={event.imageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="포스터 원본 보기 (새 창)"
+                  className="block"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={event.imageUrl}
+                    alt={`${event.title} 포스터`}
+                    className="mx-auto max-h-[32rem] w-auto max-w-full rounded-lg object-contain ring-1 ring-foreground/10 transition-opacity hover:opacity-90"
+                  />
+                </a>
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
