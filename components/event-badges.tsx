@@ -42,3 +42,26 @@ export function StatusBadge({
   const o = STATUS_MAP[computeStatus(startDate, endDate)];
   return <span className={cn(pill, o.badgeClass, className)}>{o.label}</span>;
 }
+
+/** 게시 여부 칩 (관리자 화면) */
+export function PublishBadge({
+  published,
+  className,
+}: {
+  published: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        pill,
+        published
+          ? "bg-green-100 text-green-700 border-green-200"
+          : "bg-amber-100 text-amber-700 border-amber-200",
+        className,
+      )}
+    >
+      {published ? "게시중" : "대기"}
+    </span>
+  );
+}

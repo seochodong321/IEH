@@ -32,13 +32,23 @@ import { formatDate, formatDateRange, recurrenceLabel } from "@/lib/event-utils"
 
 export const dynamic = "force-dynamic";
 
+// 공개 상세에서 볼 수 있는 행사만 반환 — 대기(미게시)는 관리자(로그인)만.
+// 메타데이터와 본문이 같은 가시성 규칙을 공유하도록 한 곳에 모은다.
+// (getEventById는 React.cache라 두 번 호출해도 쿼리는 1회)
+async function getViewableEvent(id: string) {
+  const event = await getEventById(id);
+  if (!event) return null;
+  if (!event.published && !(await isAuthenticated())) return null;
+  return event;
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const event = await getEventById(id);
+  const event = await getViewableEvent(id);
   if (!event) return { title: "행사를 찾을 수 없습니다" };
   const where = `${DISTRICT_MAP[event.district].label} · ${event.venue}`;
   return {
@@ -53,10 +63,8 @@ export default async function EventDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const event = await getEventById(id);
+  const event = await getViewableEvent(id);
   if (!event) notFound();
-  // 대기(미게시) 행사는 관리자(로그인 상태)만 미리볼 수 있다
-  if (!event.published && !(await isAuthenticated())) notFound();
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

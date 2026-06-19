@@ -8,7 +8,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CategoryBadge, StatusBadge } from "@/components/event-badges";
+import {
+  CategoryBadge,
+  PublishBadge,
+  StatusBadge,
+} from "@/components/event-badges";
 import { DeleteEventButton } from "@/components/delete-event-button";
 import { ApproveEventButton } from "@/components/approve-event-button";
 import { buttonVariants } from "@/components/ui/button";
@@ -65,15 +69,7 @@ export function AdminEventTable({ events }: { events: EventRecord[] }) {
                 <StatusBadge startDate={e.startDate} endDate={e.endDate} />
               </TableCell>
               <TableCell>
-                {e.published ? (
-                  <span className="inline-flex items-center rounded-full border border-green-200 bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                    게시중
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                    대기
-                  </span>
-                )}
+                <PublishBadge published={e.published} />
               </TableCell>
               <TableCell className="pr-4">
                 <div className="flex items-center justify-end gap-1">
