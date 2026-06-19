@@ -42,6 +42,12 @@ export const CATEGORIES: Option<Category>[] = [
     dotClass: "bg-violet-500",
   },
   {
+    value: "exhibition",
+    label: "전시",
+    badgeClass: "bg-cyan-100 text-cyan-700 border-cyan-200",
+    dotClass: "bg-cyan-500",
+  },
+  {
     value: "expo",
     label: "박람회",
     badgeClass: "bg-sky-100 text-sky-700 border-sky-200",

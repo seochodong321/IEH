@@ -26,7 +26,7 @@ function rowToRecord(r: EventRow): EventRecord {
   return {
     id: r.id,
     title: r.title,
-    category: r.category,
+    category: r.category as EventRecord["category"],
     startDate: r.startDate,
     endDate: r.endDate,
     startTime: r.startTime,
@@ -34,7 +34,7 @@ function rowToRecord(r: EventRow): EventRecord {
     recurrenceType: (r.recurrenceType as EventRecord["recurrenceType"]) ?? "none",
     recurrenceDays: r.recurrenceDays ?? [],
     venue: r.venue,
-    district: r.district,
+    district: r.district as EventRecord["district"],
     orgType: (r.orgType as EventRecord["orgType"]) ?? "public",
     organizer: r.organizer,
     host: r.host,

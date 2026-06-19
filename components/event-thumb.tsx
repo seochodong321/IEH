@@ -1,4 +1,5 @@
 import {
+  Frame,
   GraduationCap,
   Music,
   PartyPopper,
@@ -13,6 +14,7 @@ import type { Category } from "@/lib/types";
 const META: Record<Category, { icon: LucideIcon; gradient: string }> = {
   festival: { icon: PartyPopper, gradient: "from-rose-400 to-pink-500" },
   performance: { icon: Music, gradient: "from-violet-400 to-purple-500" },
+  exhibition: { icon: Frame, gradient: "from-cyan-400 to-teal-500" },
   expo: { icon: Presentation, gradient: "from-sky-400 to-blue-500" },
   sports: { icon: Trophy, gradient: "from-emerald-400 to-teal-500" },
   education: { icon: GraduationCap, gradient: "from-amber-400 to-orange-500" },

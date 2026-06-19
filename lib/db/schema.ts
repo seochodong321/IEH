@@ -9,29 +9,8 @@ import {
   integer,
 } from "drizzle-orm/pg-core";
 
-// 분류값은 lib/constants.ts 의 value 들과 반드시 일치해야 한다.
-export const categoryEnum = pgEnum("category", [
-  "festival",
-  "performance",
-  "expo",
-  "sports",
-  "education",
-  "etc",
-]);
-
-export const districtEnum = pgEnum("district", [
-  "jemulpo",
-  "yeongjong",
-  "michuhol",
-  "yeonsu",
-  "namdong",
-  "bupyeong",
-  "gyeyang",
-  "seo",
-  "geomdan",
-  "ganghwa",
-  "ongjin",
-]);
+// category·district 는 자주 바뀌는 분류라 DB enum 대신 text 로 둔다.
+// 유효성은 앱(lib/constants.ts 의 *_MAP)에서 검증하므로, 항목 추가는 코드 수정만으로 된다.
 
 export const indoorOutdoorEnum = pgEnum("indoor_outdoor", [
   "indoor",
@@ -44,7 +23,7 @@ export const orgTypeEnum = pgEnum("org_type", ["public", "private", "ppp"]);
 export const events = pgTable("events", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
-  category: categoryEnum("category").notNull(),
+  category: text("category").notNull(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   startTime: text("start_time"),
@@ -52,7 +31,7 @@ export const events = pgTable("events", {
   recurrenceType: text("recurrence_type").notNull().default("none"),
   recurrenceDays: integer("recurrence_days").array(),
   venue: text("venue").notNull(),
-  district: districtEnum("district").notNull(),
+  district: text("district").notNull(),
   orgType: orgTypeEnum("org_type").notNull().default("public"),
   organizer: text("organizer").notNull(),
   host: text("host").notNull(),
@@ -86,11 +65,11 @@ export const submissionStatusEnum = pgEnum("submission_status", [
 export const submissions = pgTable("submissions", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
-  category: categoryEnum("category"),
+  category: text("category"),
   startDate: date("start_date"),
   endDate: date("end_date"),
   venue: text("venue"),
-  district: districtEnum("district"),
+  district: text("district"),
   organizer: text("organizer"),
   host: text("host"),
   description: text("description"),

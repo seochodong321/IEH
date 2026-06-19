@@ -3,6 +3,7 @@
 export type Category =
   | "festival"
   | "performance"
+  | "exhibition"
   | "expo"
   | "sports"
   | "education"

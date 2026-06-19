@@ -72,6 +72,8 @@ export function EventForm({
     event?.indoorOutdoor ?? "outdoor",
   );
   const [orgType, setOrgType] = useState<OrgType>(event?.orgType ?? "public");
+  // 종료일 최소값을 시작일로 묶기 위해 시작일은 controlled 로 관리
+  const [startDate, setStartDate] = useState(event?.startDate ?? "");
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(
     event?.recurrenceType ?? "none",
   );
@@ -129,7 +131,8 @@ export function EventForm({
             id="startDate"
             name="startDate"
             type="date"
-            defaultValue={event?.startDate}
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
             required
           />
         </Field>
@@ -140,6 +143,7 @@ export function EventForm({
             name="endDate"
             type="date"
             defaultValue={event?.endDate}
+            min={startDate || undefined}
             required
           />
         </Field>

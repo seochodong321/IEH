@@ -22,11 +22,11 @@ function rowToRecord(r: SubmissionRow): EventSubmission {
   return {
     id: r.id,
     title: r.title,
-    category: r.category,
+    category: r.category as EventSubmission["category"],
     startDate: r.startDate,
     endDate: r.endDate,
     venue: r.venue,
-    district: r.district,
+    district: r.district as EventSubmission["district"],
     organizer: r.organizer,
     host: r.host,
     description: r.description,
