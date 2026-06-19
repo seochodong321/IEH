@@ -69,6 +69,8 @@ export interface EventRecord {
   imageUrl: string | null;
   /** 주요(대표) 행사 여부 */
   isFeatured: boolean;
+  /** 게시 여부 — false면 대기(관리자 승인 전, 공개 화면에 안 보임) */
+  published: boolean;
   /** 좋아요(하트) 누적 수 */
   likes: number;
   /** 생성 시각 (ISO 문자열) */
@@ -77,10 +79,11 @@ export interface EventRecord {
   updatedAt: string;
 }
 
-// 등록/수정 폼이 다루는 입력값 (id/타임스탬프/좋아요 제외)
+// 등록/수정 폼이 다루는 입력값 (id/타임스탬프/좋아요/게시여부 제외)
+// 게시 여부는 폼이 아니라 승인 흐름(createEvent=대기, approve=게시)에서 관리한다.
 export type EventInput = Omit<
   EventRecord,
-  "id" | "createdAt" | "updatedAt" | "likes"
+  "id" | "createdAt" | "updatedAt" | "likes" | "published"
 >;
 
 // 캘린더·지도 등 클라이언트 컴포넌트로 넘기는 경량 행사 모델.

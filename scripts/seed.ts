@@ -48,6 +48,7 @@ async function main() {
     attachmentUrl: e.attachmentUrl,
     imageUrl: e.imageUrl,
     isFeatured: e.isFeatured,
+    published: e.published,
     likes: e.likes,
     createdAt: new Date(e.createdAt),
     updatedAt: new Date(e.updatedAt),

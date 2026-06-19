@@ -25,6 +25,7 @@ import { ShareButton } from "@/components/share-button";
 import { LikeButton } from "@/components/like-button";
 import { ReportIssueButton } from "@/components/report-issue-button";
 import { cn } from "@/lib/utils";
+import { isAuthenticated } from "@/lib/auth";
 import { getEventById } from "@/lib/data/events";
 import { DISTRICT_MAP, INDOOR_OUTDOOR_MAP } from "@/lib/constants";
 import { formatDate, formatDateRange, recurrenceLabel } from "@/lib/event-utils";
@@ -54,9 +55,17 @@ export default async function EventDetailPage({
   const { id } = await params;
   const event = await getEventById(id);
   if (!event) notFound();
+  // 대기(미게시) 행사는 관리자(로그인 상태)만 미리볼 수 있다
+  if (!event.published && !(await isAuthenticated())) notFound();
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      {!event.published ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+          이 행사는 아직 <b>대기(미게시)</b> 상태입니다 — 관리자만 볼 수 있어요.
+          관리 화면에서 “승인”하면 공개됩니다.
+        </div>
+      ) : null}
       <div className="flex items-center justify-between gap-2">
         <Link
           href="/events"

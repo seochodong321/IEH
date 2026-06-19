@@ -45,6 +45,7 @@ function rowToRecord(r: EventRow): EventRecord {
     attachmentUrl: r.attachmentUrl,
     imageUrl: r.imageUrl,
     isFeatured: r.isFeatured,
+    published: r.published ?? true,
     likes: r.likes ?? 0,
     createdAt: toIso(r.createdAt),
     updatedAt: toIso(r.updatedAt),
@@ -77,12 +78,17 @@ function inputToValues(input: EventInput) {
   };
 }
 
-async function loadAll(): Promise<EventRecord[]> {
+// includeUnpublished=false(기본)면 게시된 행사만 반환 (공개 화면용).
+// 관리자 화면은 true로 호출해 대기 행사까지 포함한다.
+async function loadAll(includeUnpublished = false): Promise<EventRecord[]> {
+  let records: EventRecord[];
   if (hasDatabase()) {
     const rows = await getDb().select().from(eventsTable);
-    return rows.map(rowToRecord);
+    records = rows.map(rowToRecord);
+  } else {
+    records = mem().map((e) => ({ ...e }));
   }
-  return mem().map((e) => ({ ...e }));
+  return includeUnpublished ? records : records.filter((e) => e.published);
 }
 
 // 검색/필터는 두 모드에서 동일하게 동작하도록 메모리에서 적용한다.
@@ -141,12 +147,12 @@ function sortEvents(
   return list.sort(byStart);
 }
 
-/** 전체 행사 (대시보드/캘린더에서 사용) */
+/** 게시된 전체 행사 (대시보드/캘린더 등 공개 화면) */
 export async function getAllEvents(): Promise<EventRecord[]> {
   return loadAll();
 }
 
-/** 필터 적용 + 정렬 (목록 페이지) */
+/** 필터 적용 + 정렬 (공개 목록 페이지). 게시된 행사만 노출 */
 export async function getEvents(
   filters: EventFilters = {},
 ): Promise<EventRecord[]> {
@@ -154,6 +160,16 @@ export async function getEvents(
   // 기준일은 요청당 한 번만 계산 (필터·정렬 전체가 같은 '오늘'을 공유)
   const today = todayKST();
   return sortEvents(applyFilters(all, filters, today), filters.sort, today);
+}
+
+/** 관리자용 전체 행사 (대기 포함). 대기 행사를 맨 위로, 그 다음 상태순 */
+export async function getAdminEvents(): Promise<EventRecord[]> {
+  const all = await loadAll(true);
+  const today = todayKST();
+  return all.sort((a, b) => {
+    if (a.published !== b.published) return a.published ? 1 : -1; // 대기 먼저
+    return compareByStatus(a, b, today);
+  });
 }
 
 /** id 단건 조회. React.cache로 같은 요청 내 중복 호출(메타데이터+페이지)을 1회로 합친다 */
@@ -171,11 +187,12 @@ export const getEventById = cache(
   },
 );
 
+// 새 행사는 항상 대기(published=false) 상태로 생성 — 관리자 승인 후 게시된다.
 export async function createEvent(input: EventInput): Promise<EventRecord> {
   if (hasDatabase()) {
     const [row] = await getDb()
       .insert(eventsTable)
-      .values(inputToValues(input))
+      .values({ ...inputToValues(input), published: false })
       .returning();
     return rowToRecord(row);
   }
@@ -183,12 +200,32 @@ export async function createEvent(input: EventInput): Promise<EventRecord> {
   const record: EventRecord = {
     ...input,
     id: crypto.randomUUID(),
+    published: false,
     likes: 0,
     createdAt: now,
     updatedAt: now,
   };
   mem().unshift(record);
   return record;
+}
+
+/** 게시 여부 설정 (승인 = true). 대상이 없으면 false */
+export async function setEventPublished(
+  id: string,
+  published: boolean,
+): Promise<boolean> {
+  if (hasDatabase()) {
+    const res = await getDb()
+      .update(eventsTable)
+      .set({ published })
+      .where(eq(eventsTable.id, id))
+      .returning({ id: eventsTable.id });
+    return res.length > 0;
+  }
+  const e = mem().find((x) => x.id === id);
+  if (!e) return false;
+  e.published = published;
+  return true;
 }
 
 export async function updateEvent(

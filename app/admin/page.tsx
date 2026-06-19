@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Flag, Inbox, LogOut, Plus } from "lucide-react";
 import { requireAuth } from "@/lib/auth";
 import { logout } from "@/actions/auth";
-import { getEvents } from "@/lib/data/events";
+import { getAdminEvents } from "@/lib/data/events";
 import { getPendingCount } from "@/lib/data/submissions";
 import { getOpenIssueCount } from "@/lib/data/issues";
 import { AdminEventTable } from "@/components/admin-event-table";
@@ -14,10 +14,11 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   await requireAuth();
   const [events, pendingReports, openIssues] = await Promise.all([
-    getEvents(),
+    getAdminEvents(),
     getPendingCount(),
     getOpenIssueCount(),
   ]);
+  const pendingEvents = events.filter((e) => !e.published).length;
 
   return (
     <div className="space-y-5">
@@ -25,7 +26,13 @@ export default async function AdminPage() {
         <div>
           <h1 className="text-2xl font-semibold">행사 관리</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            총 {events.length}건 · 등록 · 수정 · 삭제
+            총 {events.length}건
+            {pendingEvents > 0 ? (
+              <span className="font-medium text-amber-700">
+                {" "}· 승인 대기 {pendingEvents}건
+              </span>
+            ) : null}{" "}
+            · 등록 · 수정 · 삭제
           </p>
         </div>
         <div className="flex items-center gap-2">

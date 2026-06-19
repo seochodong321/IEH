@@ -63,6 +63,8 @@ export const events = pgTable("events", {
   attachmentUrl: text("attachment_url"),
   imageUrl: text("image_url"),
   isFeatured: boolean("is_featured").notNull().default(false),
+  // 게시 여부 — 기존 행은 true로 유지(default), 새 등록은 코드에서 false(대기)로 넣는다.
+  published: boolean("published").notNull().default(true),
   likes: integer("likes").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

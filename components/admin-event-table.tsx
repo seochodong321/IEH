@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { CategoryBadge, StatusBadge } from "@/components/event-badges";
 import { DeleteEventButton } from "@/components/delete-event-button";
+import { ApproveEventButton } from "@/components/approve-event-button";
 import { buttonVariants } from "@/components/ui/button";
 import { DISTRICT_MAP } from "@/lib/constants";
 import { formatDateRange } from "@/lib/event-utils";
@@ -35,12 +36,13 @@ export function AdminEventTable({ events }: { events: EventRecord[] }) {
             <TableHead>기간</TableHead>
             <TableHead>권역</TableHead>
             <TableHead>상태</TableHead>
+            <TableHead>게시</TableHead>
             <TableHead className="pr-4 text-right">관리</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {events.map((e) => (
-            <TableRow key={e.id}>
+            <TableRow key={e.id} className={cn(!e.published && "bg-amber-50/60")}>
               <TableCell className="max-w-[260px] truncate pl-4 font-medium">
                 <Link
                   href={`/events/${e.id}`}
@@ -62,8 +64,20 @@ export function AdminEventTable({ events }: { events: EventRecord[] }) {
               <TableCell>
                 <StatusBadge startDate={e.startDate} endDate={e.endDate} />
               </TableCell>
+              <TableCell>
+                {e.published ? (
+                  <span className="inline-flex items-center rounded-full border border-green-200 bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                    게시중
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                    대기
+                  </span>
+                )}
+              </TableCell>
               <TableCell className="pr-4">
                 <div className="flex items-center justify-end gap-1">
+                  {!e.published ? <ApproveEventButton id={e.id} /> : null}
                   <Link
                     href={`/admin/${e.id}/edit`}
                     aria-label="수정"

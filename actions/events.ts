@@ -8,6 +8,7 @@ import {
   createEvent,
   deleteEvent,
   getEventById,
+  setEventPublished,
   updateEvent,
 } from "@/lib/data/events";
 import { createImage, deleteImage } from "@/lib/data/images";
@@ -224,6 +225,15 @@ export async function toggleLikeAction(
   if (count === null) return { error: "행사를 찾을 수 없습니다." };
   revalidatePath(`/events/${id}`);
   return { count };
+}
+
+// 대기 행사 승인(게시). 관리자 전용.
+export async function approveEventAction(id: string): Promise<FormState> {
+  await requireAuth();
+  const ok = await setEventPublished(id, true);
+  if (!ok) return { error: "행사를 찾을 수 없습니다." };
+  revalidateAll(id);
+  return {};
 }
 
 export async function deleteEventAction(id: string): Promise<FormState> {

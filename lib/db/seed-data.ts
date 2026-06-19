@@ -63,6 +63,7 @@ function make(e: {
     attachmentUrl: e.attachmentUrl ?? null,
     imageUrl: e.imageUrl ?? null,
     isFeatured: e.isFeatured ?? false,
+    published: true, // 시드 행사는 모두 게시 상태
     createdAt: e.createdAt,
     updatedAt: e.createdAt,
   };
