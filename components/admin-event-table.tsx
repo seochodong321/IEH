@@ -16,7 +16,7 @@ import {
 import { DeleteEventButton } from "@/components/delete-event-button";
 import { ApproveEventButton } from "@/components/approve-event-button";
 import { buttonVariants } from "@/components/ui/button";
-import { DISTRICT_MAP } from "@/lib/constants";
+import { districtLabel } from "@/lib/constants";
 import { formatDateRange } from "@/lib/event-utils";
 import { cn } from "@/lib/utils";
 import type { EventRecord } from "@/lib/types";
@@ -64,7 +64,7 @@ export function AdminEventTable({ events }: { events: EventRecord[] }) {
               <TableCell className="text-muted-foreground">
                 {formatDateRange(e.startDate, e.endDate)}
               </TableCell>
-              <TableCell>{DISTRICT_MAP[e.district].label}</TableCell>
+              <TableCell>{districtLabel(e.district)}</TableCell>
               <TableCell>
                 <StatusBadge startDate={e.startDate} endDate={e.endDate} />
               </TableCell>

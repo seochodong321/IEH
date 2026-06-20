@@ -5,6 +5,7 @@ import { getDb, hasDatabase } from "@/lib/db/client";
 import { submissions as table, type SubmissionRow } from "@/lib/db/schema";
 import { seedSubmissions } from "@/lib/db/seed-data";
 import { toIso } from "@/lib/utils";
+import { asCategory } from "@/lib/constants";
 import type {
   EventSubmission,
   SubmissionInput,
@@ -22,7 +23,7 @@ function rowToRecord(r: SubmissionRow): EventSubmission {
   return {
     id: r.id,
     title: r.title,
-    category: r.category as EventSubmission["category"],
+    category: r.category ? asCategory(r.category) : null,
     startDate: r.startDate,
     endDate: r.endDate,
     venue: r.venue,

@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CategoryBadge, StatusBadge } from "@/components/event-badges";
-import { DISTRICT_MAP } from "@/lib/constants";
+import { districtLabel } from "@/lib/constants";
 import { formatDate, recurrenceLabel } from "@/lib/event-utils";
 import type { EventRecord } from "@/lib/types";
 
@@ -74,7 +74,7 @@ export function EventTable({ events }: { events: EventRecord[] }) {
                 {e.venue}
               </TableCell>
               <TableCell className="hidden sm:table-cell">
-                {DISTRICT_MAP[e.district].label}
+                {districtLabel(e.district)}
               </TableCell>
               <TableCell className="hidden max-w-[140px] truncate text-muted-foreground xl:table-cell">
                 {e.organizer}

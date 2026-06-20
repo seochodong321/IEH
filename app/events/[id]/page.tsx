@@ -27,7 +27,7 @@ import { ReportIssueButton } from "@/components/report-issue-button";
 import { cn } from "@/lib/utils";
 import { isAuthenticated } from "@/lib/auth";
 import { getEventById } from "@/lib/data/events";
-import { DISTRICT_MAP, INDOOR_OUTDOOR_MAP } from "@/lib/constants";
+import { INDOOR_OUTDOOR_MAP, districtLabel } from "@/lib/constants";
 import { formatDate, formatDateRange, recurrenceLabel } from "@/lib/event-utils";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +50,7 @@ export async function generateMetadata({
   const { id } = await params;
   const event = await getViewableEvent(id);
   if (!event) return { title: "행사를 찾을 수 없습니다" };
-  const where = `${DISTRICT_MAP[event.district].label} · ${event.venue}`;
+  const where = `${districtLabel(event.district)} · ${event.venue}`;
   return {
     title: event.title,
     description: `${formatDateRange(event.startDate, event.endDate)} · ${where}`,
@@ -121,7 +121,7 @@ export default async function EventDetailPage({
           <InfoRow icon={CalendarDays} label="시작일" value={formatDate(event.startDate)} />
           <InfoRow icon={CalendarDays} label="종료일" value={formatDate(event.endDate)} />
           <InfoRow icon={MapPin} label="장소" value={event.venue} />
-          <InfoRow icon={MapPin} label="권역" value={DISTRICT_MAP[event.district].label} />
+          <InfoRow icon={MapPin} label="권역" value={districtLabel(event.district)} />
           {event.startTime ? (
             <InfoRow
               icon={Clock}

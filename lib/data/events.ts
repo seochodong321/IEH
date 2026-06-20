@@ -12,6 +12,7 @@ import {
   todayKST,
 } from "@/lib/event-utils";
 import { toIso } from "@/lib/utils";
+import { asCategory } from "@/lib/constants";
 import type { EventFilters, EventInput, EventRecord } from "@/lib/types";
 
 // DB가 없을 때 사용하는 인메모리 저장소.
@@ -26,7 +27,7 @@ function rowToRecord(r: EventRow): EventRecord {
   return {
     id: r.id,
     title: r.title,
-    category: r.category as EventRecord["category"],
+    category: asCategory(r.category),
     startDate: r.startDate,
     endDate: r.endDate,
     startTime: r.startTime,

@@ -13,7 +13,7 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CategoryBadge, StatusBadge } from "@/components/event-badges";
-import { CATEGORY_MAP, DISTRICT_MAP, WEEKDAYS_KO } from "@/lib/constants";
+import { CATEGORY_MAP, WEEKDAYS_KO, districtLabel } from "@/lib/constants";
 import { occursOn } from "@/lib/event-utils";
 import { cn } from "@/lib/utils";
 import type { EventSummary } from "@/lib/types";
@@ -180,7 +180,7 @@ export function CalendarView({
                 </span>
                 <CategoryBadge value={e.category} />
                 <span className="hidden text-sm text-muted-foreground sm:inline">
-                  {DISTRICT_MAP[e.district].label} · {e.venue}
+                  {districtLabel(e.district)} · {e.venue}
                 </span>
               </Link>
             ))}

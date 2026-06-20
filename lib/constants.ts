@@ -152,6 +152,19 @@ export const STATUS_MAP = toMap(STATUSES);
 export const INDOOR_OUTDOOR_MAP = toMap(INDOOR_OUTDOOR);
 export const ORG_TYPE_MAP = toMap(ORG_TYPES);
 
+// category·district는 DB에서 text라 매핑에 없는 값이 들어올 수 있다(코드에서 분류 제거,
+// 수동 DB 수정 등). 아래 헬퍼로 렌더 시 크래시를 막는다.
+
+/** 알 수 없는 카테고리는 'etc'(기타)로 보정 */
+export function asCategory(value: string): Category {
+  return value in CATEGORY_MAP ? (value as Category) : "etc";
+}
+
+/** 권역 라벨 — 매핑에 없으면 원본 값을 그대로 표시(크래시 방지) */
+export function districtLabel(value: string): string {
+  return DISTRICT_MAP[value as District]?.label ?? value;
+}
+
 // 라벨만 필요한 곳(예: Select items 맵)을 위한 헬퍼
 export function labelRecord<T extends string>(
   options: Option<T>[],

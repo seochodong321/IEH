@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { getSubmissions } from "@/lib/data/submissions";
 import { ReportReviewActions } from "@/components/report-review-actions";
 import { CategoryBadge } from "@/components/event-badges";
-import { DISTRICT_MAP } from "@/lib/constants";
+import { districtLabel } from "@/lib/constants";
 import { formatDate, formatDateRange } from "@/lib/event-utils";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +55,7 @@ export default async function AdminReportsPage() {
                       <span className="text-xs">유형 미정</span>
                     )}
                     {s.district ? (
-                      <span>{DISTRICT_MAP[s.district].label}</span>
+                      <span>{districtLabel(s.district)}</span>
                     ) : null}
                     {s.startDate ? (
                       <span>
