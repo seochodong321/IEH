@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowLeft, Megaphone } from "lucide-react";
+import { ArrowLeft, Copy, Megaphone } from "lucide-react";
 import { requireAuth } from "@/lib/auth";
 import { createEventAction } from "@/actions/events";
 import { getSubmissionById } from "@/lib/data/submissions";
+import { getEventById } from "@/lib/data/events";
 import { EventForm } from "@/components/event-form";
 import type { EventRecord } from "@/lib/types";
 
@@ -24,6 +25,11 @@ export default async function NewEventPage({
     ? await getSubmissionById(submissionId)
     : null;
 
+  // 복제: 기존 행사를 불러와 폼을 채운다 (제보 프리필과 배타적)
+  const cloneId =
+    !submission && typeof sp.from === "string" ? sp.from : undefined;
+  const source = cloneId ? await getEventById(cloneId) : null;
+
   const defaults: Partial<EventRecord> | undefined = submission
     ? {
         title: submission.title,
@@ -37,7 +43,10 @@ export default async function NewEventPage({
         description: submission.description ?? undefined,
         websiteUrl: submission.websiteUrl ?? undefined,
       }
-    : undefined;
+    : source
+      ? // 이미지는 원본과 공유 시 원본 삭제로 깨질 수 있어 비우고 새로 첨부
+        { ...source, imageUrl: null }
+      : undefined;
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -56,6 +65,14 @@ export default async function NewEventPage({
           <span>
             제보 내용을 불러왔습니다. 빠진 항목을 보완해 등록하면 해당 제보는
             자동으로 승인 처리됩니다.
+          </span>
+        </div>
+      ) : source ? (
+        <div className="flex items-start gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-800 ring-1 ring-blue-200">
+          <Copy className="mt-0.5 size-4 shrink-0" />
+          <span>
+            기존 행사 “{source.title}”를 복제했습니다. 날짜·제목 등을 수정해 새
+            행사로 등록하세요. (대표 이미지는 다시 첨부해 주세요)
           </span>
         </div>
       ) : null}
