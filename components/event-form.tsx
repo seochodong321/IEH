@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,31 @@ export function EventForm({
   const [orgType, setOrgType] = useState<OrgType>(event?.orgType ?? "public");
   // 종료일 최소값을 시작일로 묶기 위해 시작일은 controlled 로 관리
   const [startDate, setStartDate] = useState(event?.startDate ?? "");
+  // 홈페이지 링크에서 대표 이미지를 불러오기 위한 상태 (imageUrl = currentImageUrl로 전송)
+  const [websiteUrl, setWebsiteUrl] = useState(event?.websiteUrl ?? "");
+  const [imageUrl, setImageUrl] = useState(event?.imageUrl ?? "");
+  const [fetchingImage, setFetchingImage] = useState(false);
+  async function loadLinkImage() {
+    const target = websiteUrl.trim();
+    if (!target) return;
+    setFetchingImage(true);
+    try {
+      const res = await fetch(
+        `/api/link-preview?url=${encodeURIComponent(target)}`,
+      );
+      const data = (await res.json()) as { image: string | null };
+      if (data.image) {
+        setImageUrl(data.image);
+        toast.success("홈페이지 대표 이미지를 불러왔어요.");
+      } else {
+        toast.error("이미지를 찾지 못했어요. 파일로 올려 주세요.");
+      }
+    } catch {
+      toast.error("불러오기에 실패했어요. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setFetchingImage(false);
+    }
+  }
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(
     event?.recurrenceType ?? "none",
   );
@@ -289,7 +315,8 @@ export function EventForm({
             id="websiteUrl"
             name="websiteUrl"
             type="url"
-            defaultValue={event?.websiteUrl ?? ""}
+            value={websiteUrl}
+            onChange={(e) => setWebsiteUrl(e.target.value)}
             placeholder="https://"
           />
         </Field>
@@ -306,29 +333,46 @@ export function EventForm({
       </div>
 
       <Field label="대표 이미지 (선택)" htmlFor="imageFile">
-        <input type="hidden" name="currentImageUrl" value={event?.imageUrl ?? ""} />
-        {event?.imageUrl ? (
+        <input type="hidden" name="currentImageUrl" value={imageUrl} />
+        {imageUrl ? (
           <div className="mb-2 flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={event.imageUrl}
-              alt="현재 대표 이미지"
+              src={imageUrl}
+              alt="대표 이미지 미리보기"
               className="h-16 w-24 rounded-md object-cover ring-1 ring-foreground/10"
             />
-            <span className="text-xs text-muted-foreground">
-              현재 이미지 · 새 파일을 올리면 교체됩니다
-            </span>
+            <button
+              type="button"
+              onClick={() => setImageUrl("")}
+              className="text-xs text-muted-foreground hover:text-destructive"
+            >
+              제거
+            </button>
           </div>
         ) : null}
-        <input
-          id="imageFile"
-          name="imageFile"
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          className="block w-full cursor-pointer text-sm text-muted-foreground file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-muted/70"
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            id="imageFile"
+            name="imageFile"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="block flex-1 cursor-pointer text-sm text-muted-foreground file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-muted/70"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={fetchingImage || !websiteUrl.trim()}
+            onClick={loadLinkImage}
+          >
+            {fetchingImage ? "가져오는 중..." : "홈페이지에서 이미지 가져오기"}
+          </Button>
+        </div>
         <p className="mt-1 text-xs text-muted-foreground">
-          PNG·JPG·WebP·GIF 이미지 업로드. 비우면 카테고리 색 썸네일로 표시됩니다.
+          파일을 올리거나, 위 <b>홈페이지 링크</b>의 대표 이미지를 불러올 수
+          있어요. 파일을 올리면 그게 우선 적용되고, 비우면 카테고리 색 썸네일로
+          표시됩니다.
         </p>
       </Field>
 
