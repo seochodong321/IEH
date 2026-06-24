@@ -21,6 +21,7 @@ import {
   StatusBadge,
 } from "@/components/event-badges";
 import { EventThumb } from "@/components/event-thumb";
+import { LinkifiedText } from "@/components/linkified-text";
 import { ShareButton } from "@/components/share-button";
 import { LikeButton } from "@/components/like-button";
 import { ReportIssueButton } from "@/components/report-issue-button";
@@ -161,9 +162,10 @@ export default async function EventDetailPage({
                 <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
                   행사 설명
                 </h2>
-                <p className="leading-relaxed break-words whitespace-pre-wrap">
-                  {event.description}
-                </p>
+                <LinkifiedText
+                  text={event.description}
+                  className="leading-relaxed break-words whitespace-pre-wrap"
+                />
               </div>
             ) : null}
             {event.imageUrl ? (
