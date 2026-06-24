@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Field, SelectField } from "@/components/form-field";
+import { TimeField } from "@/components/time-field";
 import {
   CATEGORIES,
   DISTRICTS,
@@ -75,6 +76,8 @@ export function EventForm({
   const [orgType, setOrgType] = useState<OrgType>(event?.orgType ?? "public");
   // 종료일 최소값을 시작일로 묶기 위해 시작일은 controlled 로 관리
   const [startDate, setStartDate] = useState(event?.startDate ?? "");
+  const [startTime, setStartTime] = useState(event?.startTime ?? "");
+  const [endTime, setEndTime] = useState(event?.endTime ?? "");
   // 홈페이지 링크에서 대표 이미지를 불러오기 위한 상태 (imageUrl = currentImageUrl로 전송)
   const [websiteUrl, setWebsiteUrl] = useState(event?.websiteUrl ?? "");
   const [imageUrl, setImageUrl] = useState(event?.imageUrl ?? "");
@@ -174,23 +177,19 @@ export function EventForm({
           />
         </Field>
 
-        <Field label="시작 시간 (선택)" htmlFor="startTime">
-          <Input
-            id="startTime"
-            name="startTime"
-            type="time"
-            defaultValue={event?.startTime ?? ""}
-          />
-        </Field>
+        <TimeField
+          label="시작 시간 (선택)"
+          name="startTime"
+          value={startTime}
+          onChange={setStartTime}
+        />
 
-        <Field label="종료 시간 (선택)" htmlFor="endTime">
-          <Input
-            id="endTime"
-            name="endTime"
-            type="time"
-            defaultValue={event?.endTime ?? ""}
-          />
-        </Field>
+        <TimeField
+          label="종료 시간 (선택)"
+          name="endTime"
+          value={endTime}
+          onChange={setEndTime}
+        />
       </div>
 
       <Field label="반복 설정" required>
