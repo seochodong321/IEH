@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -75,7 +75,9 @@ export function EventForm({
   );
   const [orgType, setOrgType] = useState<OrgType>(event?.orgType ?? "public");
   // 종료일 최소값을 시작일로 묶기 위해 시작일은 controlled 로 관리
+  const [title, setTitle] = useState(event?.title ?? "");
   const [startDate, setStartDate] = useState(event?.startDate ?? "");
+  const [endDate, setEndDate] = useState(event?.endDate ?? "");
   const [startTime, setStartTime] = useState(event?.startTime ?? "");
   const [endTime, setEndTime] = useState(event?.endTime ?? "");
   // 홈페이지 링크에서 대표 이미지를 불러오기 위한 상태 (imageUrl = currentImageUrl로 전송)
@@ -103,6 +105,36 @@ export function EventForm({
       setFetchingImage(false);
     }
   }
+  // 같은 제목·시작일의 행사가 이미 있는지 (입력 변화 시 디바운스 조회 → 비차단 경고)
+  const [duplicates, setDuplicates] = useState<
+    { id: string; title: string; startDate: string }[]
+  >([]);
+  useEffect(() => {
+    const t = title.trim();
+    let ignore = false;
+    const timer = setTimeout(async () => {
+      if (!t || !startDate) {
+        if (!ignore) setDuplicates([]);
+        return;
+      }
+      try {
+        const params = new URLSearchParams({ title: t, startDate });
+        if (event?.id) params.set("excludeId", event.id);
+        const res = await fetch(`/api/events/check-duplicate?${params}`);
+        const data = (await res.json()) as {
+          matches: { id: string; title: string; startDate: string }[];
+        };
+        if (!ignore) setDuplicates(data.matches ?? []);
+      } catch {
+        if (!ignore) setDuplicates([]);
+      }
+    }, 400);
+    return () => {
+      ignore = true;
+      clearTimeout(timer);
+    };
+  }, [title, startDate, event?.id]);
+
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(
     event?.recurrenceType ?? "none",
   );
@@ -130,7 +162,8 @@ export function EventForm({
         <Input
           id="title"
           name="title"
-          defaultValue={event?.title}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="예: 2026 송도 마이크로 페스티벌"
           required
         />
@@ -161,7 +194,12 @@ export function EventForm({
             name="startDate"
             type="date"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setStartDate(v);
+              // 단일일 행사: 종료일이 비어 있으면 시작일과 같게 자동 채움
+              if (!endDate) setEndDate(v);
+            }}
             required
           />
         </Field>
@@ -171,7 +209,8 @@ export function EventForm({
             id="endDate"
             name="endDate"
             type="date"
-            defaultValue={event?.endDate}
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
             min={startDate || undefined}
             required
           />
@@ -384,6 +423,31 @@ export function EventForm({
         />
         주요 행사로 표시 (대시보드 상단·별표 노출)
       </label>
+
+      {duplicates.length > 0 ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+          <p className="font-medium">
+            같은 제목·시작일의 행사가 이미 있어요 ({duplicates.length}건)
+          </p>
+          <ul className="mt-1 space-y-0.5">
+            {duplicates.map((d) => (
+              <li key={d.id}>
+                ·{" "}
+                <a
+                  href={`/events/${d.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  {d.title}
+                </a>{" "}
+                ({d.startDate})
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1 text-xs">중복이 아니라면 그대로 등록하셔도 됩니다.</p>
+        </div>
+      ) : null}
 
       {state.error ? (
         <p className="text-sm text-destructive">{state.error}</p>

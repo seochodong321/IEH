@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Copy, Pencil, Search, Star } from "lucide-react";
+import { Check, Copy, Pencil, Search, Star } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -19,7 +19,9 @@ import {
 } from "@/components/event-badges";
 import { DeleteEventButton } from "@/components/delete-event-button";
 import { ApproveEventButton } from "@/components/approve-event-button";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { useActionRunner } from "@/components/use-action-runner";
+import { approveEventsAction } from "@/actions/events";
 import { districtLabel } from "@/lib/constants";
 import { formatDateRange } from "@/lib/event-utils";
 import { cn } from "@/lib/utils";
@@ -36,6 +38,8 @@ const PUB_FILTERS: { value: PubFilter; label: string }[] = [
 export function AdminEventTable({ events }: { events: EventRecord[] }) {
   const [query, setQuery] = useState("");
   const [pub, setPub] = useState<PubFilter>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const { pending: approving, run } = useActionRunner();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -52,6 +56,33 @@ export function AdminEventTable({ events }: { events: EventRecord[] }) {
       );
     });
   }, [events, query, pub]);
+
+  const pendingInView = filtered.filter((e) => !e.published);
+  const allPendingSelected =
+    pendingInView.length > 0 && pendingInView.every((e) => selected.has(e.id));
+
+  const toggleOne = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const toggleAll = () =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allPendingSelected) pendingInView.forEach((e) => next.delete(e.id));
+      else pendingInView.forEach((e) => next.add(e.id));
+      return next;
+    });
+
+  const bulkApprove = () =>
+    run(
+      () => approveEventsAction([...selected]),
+      `${selected.size}건을 게시했습니다.`,
+      () => setSelected(new Set()),
+    );
 
   if (events.length === 0) {
     return (
@@ -92,11 +123,40 @@ export function AdminEventTable({ events }: { events: EventRecord[] }) {
         </div>
       </div>
 
+      {selected.size > 0 ? (
+        <div className="flex items-center gap-3 rounded-lg bg-blue-50 px-3 py-2 text-sm ring-1 ring-blue-200">
+          <span className="font-medium text-blue-800">
+            대기 {selected.size}건 선택됨
+          </span>
+          <Button size="sm" disabled={approving} onClick={bulkApprove}>
+            <Check className="size-4" />
+            선택 승인
+          </Button>
+          <button
+            type="button"
+            onClick={() => setSelected(new Set())}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            선택 해제
+          </button>
+        </div>
+      ) : null}
+
       <div className="rounded-xl bg-card ring-1 ring-foreground/10">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-4">행사명</TableHead>
+              <TableHead className="w-9 pl-4">
+                <input
+                  type="checkbox"
+                  aria-label="대기 행사 전체 선택"
+                  className="size-4 accent-blue-600 disabled:opacity-40"
+                  checked={allPendingSelected}
+                  disabled={pendingInView.length === 0}
+                  onChange={toggleAll}
+                />
+              </TableHead>
+              <TableHead>행사명</TableHead>
               <TableHead>유형</TableHead>
               <TableHead>기간</TableHead>
               <TableHead>권역</TableHead>
@@ -109,7 +169,7 @@ export function AdminEventTable({ events }: { events: EventRecord[] }) {
             {filtered.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="py-10 text-center text-sm text-muted-foreground"
                 >
                   검색 결과가 없습니다.
@@ -121,7 +181,18 @@ export function AdminEventTable({ events }: { events: EventRecord[] }) {
                   key={e.id}
                   className={cn(!e.published && "bg-amber-50/60")}
                 >
-                  <TableCell className="max-w-[260px] truncate pl-4 font-medium">
+                  <TableCell className="pl-4">
+                    {!e.published ? (
+                      <input
+                        type="checkbox"
+                        aria-label={`${e.title} 선택`}
+                        className="size-4 accent-blue-600"
+                        checked={selected.has(e.id)}
+                        onChange={() => toggleOne(e.id)}
+                      />
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="max-w-[260px] truncate font-medium">
                     <Link
                       href={`/events/${e.id}`}
                       className="inline-flex items-center gap-1.5 hover:underline"

@@ -22,6 +22,7 @@ import {
 } from "@/components/event-badges";
 import { EventThumb } from "@/components/event-thumb";
 import { LinkifiedText } from "@/components/linkified-text";
+import { ImageLightbox } from "@/components/image-lightbox";
 import { ShareButton } from "@/components/share-button";
 import { LikeButton } from "@/components/like-button";
 import { ReportIssueButton } from "@/components/report-issue-button";
@@ -173,20 +174,10 @@ export default async function EventDetailPage({
                 <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
                   관련 이미지
                 </h2>
-                <a
-                  href={event.imageUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="관련 이미지 원본 보기 (새 창)"
-                  className="block"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={event.imageUrl}
-                    alt={`${event.title} 관련 이미지`}
-                    className="mx-auto max-h-[32rem] w-auto max-w-full rounded-lg object-contain ring-1 ring-foreground/10 transition-opacity hover:opacity-90"
-                  />
-                </a>
+                <ImageLightbox
+                  src={event.imageUrl}
+                  alt={`${event.title} 관련 이미지`}
+                />
               </div>
             ) : null}
           </div>

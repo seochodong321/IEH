@@ -210,6 +210,23 @@ export async function createEvent(input: EventInput): Promise<EventRecord> {
   return record;
 }
 
+/** 같은 제목(공백·대소문자 무시) + 같은 시작일의 행사 (대기 포함) — 중복 등록 경고용 */
+export async function findDuplicateEvents(
+  title: string,
+  startDate: string,
+  excludeId?: string,
+): Promise<EventRecord[]> {
+  const norm = title.trim().toLowerCase();
+  if (!norm || !startDate) return [];
+  const all = await loadAll(true);
+  return all.filter(
+    (e) =>
+      e.id !== excludeId &&
+      e.startDate === startDate &&
+      e.title.trim().toLowerCase() === norm,
+  );
+}
+
 /** 게시 여부 설정 (승인 = true). 대상이 없으면 false */
 export async function setEventPublished(
   id: string,

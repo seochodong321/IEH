@@ -236,6 +236,14 @@ export async function approveEventAction(id: string): Promise<FormState> {
   return {};
 }
 
+// 대기 행사 일괄 승인. 관리자 전용.
+export async function approveEventsAction(ids: string[]): Promise<FormState> {
+  await requireAuth();
+  for (const id of ids) await setEventPublished(id, true);
+  revalidateAll();
+  return {};
+}
+
 export async function deleteEventAction(id: string): Promise<FormState> {
   await requireAuth();
   const prev = await getEventById(id);
