@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/lib/db/client";
 import { events as eventsTable, type EventRow } from "@/lib/db/schema";
 import { seedEvents } from "@/lib/db/seed-data";
@@ -244,6 +244,23 @@ export async function setEventPublished(
   if (!e) return false;
   e.published = published;
   return true;
+}
+
+/** 여러 행사 게시 여부 일괄 설정 (승인 등) — DB는 단일 IN 쿼리 */
+export async function setEventsPublished(
+  ids: string[],
+  published: boolean,
+): Promise<void> {
+  if (ids.length === 0) return;
+  if (hasDatabase()) {
+    await getDb()
+      .update(eventsTable)
+      .set({ published })
+      .where(inArray(eventsTable.id, ids));
+    return;
+  }
+  const set = new Set(ids);
+  for (const e of mem()) if (set.has(e.id)) e.published = published;
 }
 
 export async function updateEvent(

@@ -57,9 +57,16 @@ export function AdminEventTable({ events }: { events: EventRecord[] }) {
     });
   }, [events, query, pub]);
 
-  const pendingInView = filtered.filter((e) => !e.published);
-  const allPendingSelected =
-    pendingInView.length > 0 && pendingInView.every((e) => selected.has(e.id));
+  const pendingInView = useMemo(
+    () => filtered.filter((e) => !e.published),
+    [filtered],
+  );
+  const allPendingSelected = useMemo(
+    () =>
+      pendingInView.length > 0 &&
+      pendingInView.every((e) => selected.has(e.id)),
+    [pendingInView, selected],
+  );
 
   const toggleOne = (id: string) =>
     setSelected((prev) => {

@@ -24,6 +24,39 @@ const MINUTE_ITEMS: Record<string, string> = Object.fromEntries(
   MINUTES.map((m) => [m, `${m}분`]),
 );
 
+// 시·분 공용 드롭다운 (Select 보일러플레이트 1곳)
+function TimeSelect({
+  items,
+  value,
+  disabled,
+  onChange,
+}: {
+  items: Record<string, string>;
+  value: string;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <Select
+      items={items}
+      value={value}
+      disabled={disabled}
+      onValueChange={(v) => onChange(String(v))}
+    >
+      <SelectTrigger className="h-9 flex-1">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {Object.entries(items).map(([v, l]) => (
+          <SelectItem key={v} value={v}>
+            {l}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export function TimeField({
   label,
   name,
@@ -46,44 +79,19 @@ export function TimeField({
     <Field label={label}>
       <input type="hidden" name={name} value={value} />
       <div className="flex items-center gap-2">
-        <Select
+        <TimeSelect
           items={HOUR_ITEMS}
           value={hasHour ? h : NONE}
-          onValueChange={(v) => {
-            const hh = String(v);
-            onChange(hh === NONE ? "" : `${hh}:${m || "00"}`);
-          }}
-        >
-          <SelectTrigger className="h-9 flex-1">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(HOUR_ITEMS).map(([v, l]) => (
-              <SelectItem key={v} value={v}>
-                {l}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
+          onChange={(hh) => onChange(hh === NONE ? "" : `${hh}:${m || "00"}`)}
+        />
+        <TimeSelect
           items={minuteItems}
           value={m || "00"}
           disabled={!hasHour}
-          onValueChange={(v) => {
-            if (hasHour) onChange(`${h}:${String(v)}`);
+          onChange={(mm) => {
+            if (hasHour) onChange(`${h}:${mm}`);
           }}
-        >
-          <SelectTrigger className="h-9 flex-1">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(minuteItems).map(([v, l]) => (
-              <SelectItem key={v} value={v}>
-                {l}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        />
       </div>
     </Field>
   );

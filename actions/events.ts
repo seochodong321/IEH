@@ -9,6 +9,7 @@ import {
   deleteEvent,
   getEventById,
   setEventPublished,
+  setEventsPublished,
   updateEvent,
 } from "@/lib/data/events";
 import { createImage, deleteImage } from "@/lib/data/images";
@@ -236,10 +237,10 @@ export async function approveEventAction(id: string): Promise<FormState> {
   return {};
 }
 
-// 대기 행사 일괄 승인. 관리자 전용.
+// 대기 행사 일괄 승인. 관리자 전용. (단일 IN 쿼리)
 export async function approveEventsAction(ids: string[]): Promise<FormState> {
   await requireAuth();
-  for (const id of ids) await setEventPublished(id, true);
+  await setEventsPublished(ids, true);
   revalidateAll();
   return {};
 }
