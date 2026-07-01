@@ -1,5 +1,5 @@
 import { ExternalLink } from "lucide-react";
-import { LinkifiedText } from "@/components/linkified-text";
+import { RichText } from "@/components/rich-text";
 import type { Post } from "@/lib/types";
 
 // 관리자가 올린 게시물을 대시보드 하단 '관련 게시물'로 노출.
@@ -22,7 +22,7 @@ export function DashboardPosts({ posts }: { posts: Post[] }) {
             <div className="flex flex-1 flex-col gap-1.5 p-4">
               <h3 className="font-semibold break-words">{p.title}</h3>
               {p.content ? (
-                <LinkifiedText
+                <RichText
                   text={p.content}
                   className="line-clamp-4 text-sm leading-relaxed break-words whitespace-pre-wrap text-muted-foreground"
                 />
