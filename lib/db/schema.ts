@@ -101,6 +101,23 @@ export const issues = pgTable("issues", {
 
 export type IssueRow = typeof issues.$inferSelect;
 
+// 관리자가 올리는 게시물(공지·관련 소식) → 대시보드 하단 '관련 게시물'에 노출
+export const posts = pgTable("posts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  content: text("content").notNull().default(""),
+  linkUrl: text("link_url"),
+  imageUrl: text("image_url"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type PostRow = typeof posts.$inferSelect;
+
 // 업로드 이미지 저장소 (Neon에 base64로 보관, /api/images/[id]로 서빙).
 // events 행을 가볍게 유지하려고 별도 테이블에 둔다.
 export const images = pgTable("images", {

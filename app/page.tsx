@@ -13,8 +13,10 @@ import { FeaturedEventItem } from "@/components/featured-event-item";
 import { MiniCalendar } from "@/components/mini-calendar";
 import { RegionDistributionPanel } from "@/components/region-distribution-panel";
 import { EventTable } from "@/components/event-table";
+import { DashboardPosts } from "@/components/dashboard-posts";
 import { Panel } from "@/components/panel";
 import { getAllEvents } from "@/lib/data/events";
+import { getPosts } from "@/lib/data/posts";
 import {
   compareByStatus,
   computeStatus,
@@ -29,7 +31,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const today = todayKST();
-  const events = await getAllEvents();
+  const [events, posts] = await Promise.all([getAllEvents(), getPosts(6)]);
   const stats = getStats(events, today);
   const featuredCount = events.filter((e) => e.isFeatured).length;
   const week = weekRange(today);
@@ -172,6 +174,8 @@ export default async function DashboardPage() {
         </div>
         <EventTable events={recent} />
       </section>
+
+      <DashboardPosts posts={posts} />
     </div>
   );
 }

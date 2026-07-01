@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Flag, Inbox, LogOut, Plus } from "lucide-react";
+import { FileText, Flag, Inbox, LogOut, Plus } from "lucide-react";
 import { requireAuth } from "@/lib/auth";
 import { logout } from "@/actions/auth";
 import { getAdminEvents } from "@/lib/data/events";
@@ -65,6 +65,13 @@ export default async function AdminPage() {
                 {openIssues}
               </span>
             ) : null}
+          </Link>
+          <Link
+            href="/admin/posts"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            <FileText className="size-4" />
+            게시물
           </Link>
           <Link
             href="/admin/new"

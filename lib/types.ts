@@ -149,6 +149,21 @@ export interface EventIssue {
 
 export type IssueInput = Omit<EventIssue, "id" | "status" | "createdAt">;
 
+// ── 게시물(관리자 공지·관련 소식) ──
+export interface Post {
+  id: string;
+  title: string;
+  content: string;
+  /** 외부 링크 (선택) — 있으면 카드 클릭 시 이동 */
+  linkUrl: string | null;
+  /** 대표 이미지 URL (선택) */
+  imageUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PostInput = Omit<Post, "id" | "createdAt" | "updatedAt">;
+
 // 행사 목록 검색/필터 조건
 export interface EventFilters {
   /** 행사명·장소·주최·주관 통합 검색어 */
