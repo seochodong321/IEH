@@ -19,7 +19,7 @@ export const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string }[] = [
   { value: "weekly", label: "매주 특정 요일 반복" },
 ];
 
-export interface Option<T extends string> {
+interface Option<T extends string> {
   value: T;
   label: string;
   /** 뱃지/칩 배경+글자 색 (색이 필요한 분류에만) */

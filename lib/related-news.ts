@@ -5,7 +5,7 @@ import { unstable_cache } from "next/cache";
 // 행사 제목으로 Google 뉴스 RSS를 검색해 관련 기사를 가져온다.
 // 별도 API 키·저장소 없이 동작하며, Next fetch 캐시로 6시간 캐싱한다.
 
-export type NewsItem = {
+type NewsItem = {
   title: string;
   link: string;
   source: string;

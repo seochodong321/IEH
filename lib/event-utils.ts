@@ -30,7 +30,7 @@ export function computeStatus(
 }
 
 /** 상태 정렬 우선순위: 진행중 → 예정 → 종료 */
-export const STATUS_RANK: Record<EventStatus, number> = {
+const STATUS_RANK: Record<EventStatus, number> = {
   ongoing: 0,
   upcoming: 1,
   ended: 2,
@@ -51,7 +51,7 @@ export function compareByStatus(
 }
 
 /** 날짜 문자열의 요일 (0=일 ... 6=토). UTC 기준으로 계산해 TZ 영향 제거 */
-export function weekdayOf(date: string): number {
+function weekdayOf(date: string): number {
   return new Date(`${date}T00:00:00Z`).getUTCDay();
 }
 
