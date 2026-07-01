@@ -10,6 +10,7 @@ import {
   Landmark,
   MapPin,
   Megaphone,
+  Newspaper,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ const NAV: NavItem[] = [
   { href: "/", label: "대시보드", icon: LayoutGrid },
   { href: "/events", label: "행사 목록", icon: ListChecks },
   { href: "/calendar", label: "캘린더", icon: CalendarDays },
+  { href: "/posts", label: "새소식", icon: Newspaper },
   { href: "/report", label: "제보하기", icon: Megaphone },
   { href: "/map", label: "지도 보기", icon: MapPin },
   { href: "/stats", label: "통계 현황", icon: BarChart3 },

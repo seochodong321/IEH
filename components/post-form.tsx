@@ -1,6 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import {
+  useActionState,
+  useState,
+  type ClipboardEvent as ReactClipboardEvent,
+} from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Bold } from "lucide-react";
@@ -35,35 +39,64 @@ export function PostForm({
   const [linkUrl, setLinkUrl] = useState(post?.linkUrl ?? "");
   const [imageUrl, setImageUrl] = useState(post?.imageUrl ?? "");
   const [fetchingThumb, setFetchingThumb] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const textarea = () =>
     document.getElementById("post-content") as HTMLTextAreaElement | null;
 
   // 선택 영역을 기호로 감싸기(굵게). 선택이 없으면 커서 자리에 삽입.
+  // 값은 DOM에서 읽어 stale 클로저를 피한다.
   function surround(before: string, after = before) {
     const el = textarea();
     if (!el) return;
-    const s = el.selectionStart;
-    const e = el.selectionEnd;
-    const sel = content.slice(s, e);
-    setContent(content.slice(0, s) + before + sel + after + content.slice(e));
+    const { selectionStart: s, selectionEnd: e, value } = el;
+    setContent(
+      value.slice(0, s) + before + value.slice(s, e) + after + value.slice(e),
+    );
     requestAnimationFrame(() => {
       el.focus();
-      el.setSelectionRange(s + before.length, s + before.length + sel.length);
+      el.setSelectionRange(s + before.length, e + before.length);
     });
   }
 
   function insert(str: string) {
     const el = textarea();
     if (!el) return;
-    const s = el.selectionStart;
-    const e = el.selectionEnd;
-    setContent(content.slice(0, s) + str + content.slice(e));
+    const { selectionStart: s, selectionEnd: e, value } = el;
+    setContent(value.slice(0, s) + str + value.slice(e));
     const pos = s + str.length;
     requestAnimationFrame(() => {
       el.focus();
       el.setSelectionRange(pos, pos);
     });
+  }
+
+  // 클립보드 이미지를 붙여넣으면 업로드 후 본문에 ![](url) 삽입
+  async function onPaste(e: ReactClipboardEvent<HTMLTextAreaElement>) {
+    const imgItem = Array.from(e.clipboardData?.items ?? []).find(
+      (it) => it.kind === "file" && it.type.startsWith("image/"),
+    );
+    if (!imgItem) return; // 이미지가 아니면 기본 텍스트 붙여넣기
+    e.preventDefault();
+    const file = imgItem.getAsFile();
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/images", { method: "POST", body: fd });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (data.url) {
+        insert(`\n![](${data.url})\n`);
+        toast.success("이미지를 본문에 넣었어요.");
+      } else {
+        toast.error(data.error ?? "이미지 업로드에 실패했어요.");
+      }
+    } catch {
+      toast.error("이미지 업로드에 실패했어요.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function loadThumb() {
@@ -127,12 +160,18 @@ export function PostForm({
           name="content"
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          onPaste={onPaste}
           rows={7}
-          placeholder="**굵게**, 링크(http…)는 자동으로 적용됩니다."
+          placeholder="**굵게**, 링크(http…)는 자동으로 적용됩니다. 이미지는 복사해서 붙여넣기(Ctrl/⌘+V)."
         />
         <p className="mt-1 text-xs text-muted-foreground">
-          굵게는 <b>**양쪽 별표**</b>로, 링크는 http로 시작하면 자동으로
-          걸립니다. 이모지·특수문자는 그대로 입력하면 됩니다.
+          굵게 <b>**별표**</b> · http 링크 자동 · 이모지·특수문자 그대로 ·{" "}
+          <b>이미지는 복사해 붙여넣기</b>
+          {uploading ? (
+            <span className="ml-1 font-medium text-blue-600">
+              이미지 업로드 중…
+            </span>
+          ) : null}
         </p>
       </Field>
 
@@ -194,7 +233,7 @@ export function PostForm({
       ) : null}
 
       <div className="flex items-center gap-2 pt-2">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending || uploading}>
           {pending ? "저장 중..." : submitLabel}
         </Button>
         <Button type="button" variant="ghost" render={<Link href="/admin/posts" />}>

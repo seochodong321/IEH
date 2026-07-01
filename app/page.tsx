@@ -161,7 +161,9 @@ export default async function DashboardPage() {
         <RegionDistributionPanel events={summaries} />
       </section>
 
-      {/* 하단 행사 목록 */}
+      <DashboardPosts posts={posts} />
+
+      {/* 하단: 최근 등록 행사 (가장 아래) */}
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold">최근 등록 행사</h2>
@@ -174,8 +176,6 @@ export default async function DashboardPage() {
         </div>
         <EventTable events={recent} />
       </section>
-
-      <DashboardPosts posts={posts} />
     </div>
   );
 }
