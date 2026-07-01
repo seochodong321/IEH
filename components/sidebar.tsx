@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -10,7 +11,9 @@ import {
   Landmark,
   MapPin,
   Megaphone,
+  Menu,
   Newspaper,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -53,13 +56,20 @@ function Logo() {
   );
 }
 
-function NavLinks({ pathname }: { pathname: string }) {
+function NavLinks({
+  pathname,
+  onNavigate,
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+}) {
   return (
     <nav className="flex flex-col gap-1">
       {NAV.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
           href={href}
+          onClick={onNavigate}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
             isActive(pathname, href)
@@ -112,30 +122,63 @@ export function Sidebar() {
 
 export function MobileNav() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  // 드로어 열려 있을 때 뒤 배경 스크롤 잠금
+  useEffect(() => {
+    if (!open) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   return (
-    <header className="sticky top-0 z-30 border-b bg-slate-900 md:hidden">
-      <div className="flex h-14 items-center gap-2 px-4">
-        <Link href="/" className="flex items-center gap-2 text-white">
-          <Landmark className="size-5 text-blue-400" />
-          <span className="text-sm font-semibold">인천 행사 상황판</span>
-        </Link>
-        <nav className="ml-auto flex items-center gap-1">
-          {NAV.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                isActive(pathname, href)
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-300 hover:bg-white/10 hover:text-white",
-              )}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-    </header>
+    <>
+      <header className="sticky top-0 z-30 border-b bg-slate-900 md:hidden">
+        <div className="flex h-14 items-center justify-between px-4">
+          <Link href="/" className="flex items-center gap-2 text-white">
+            <Landmark className="size-5 text-blue-400" />
+            <span className="text-sm font-semibold">인천 행사 상황판</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label="메뉴 열기"
+            className="-mr-2 rounded-md p-2 text-slate-200 hover:bg-white/10"
+          >
+            <Menu className="size-6" />
+          </button>
+        </div>
+      </header>
+
+      {open ? (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button
+            type="button"
+            aria-label="메뉴 닫기"
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 bg-black/40"
+          />
+          <div className="absolute inset-y-0 right-0 flex w-72 max-w-[85%] flex-col gap-6 overflow-y-auto bg-slate-900 p-4 shadow-xl">
+            <div className="flex items-start justify-between gap-2">
+              <Logo />
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="메뉴 닫기"
+                className="-mr-1 rounded-md p-2 text-slate-200 hover:bg-white/10"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
+            <div className="mt-auto">
+              <Footer />
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
