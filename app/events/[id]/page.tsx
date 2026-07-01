@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -23,6 +24,7 @@ import {
 import { EventThumb } from "@/components/event-thumb";
 import { LinkifiedText } from "@/components/linkified-text";
 import { ImageLightbox } from "@/components/image-lightbox";
+import { RelatedNews } from "@/components/related-news";
 import { ShareButton } from "@/components/share-button";
 import { LikeButton } from "@/components/like-button";
 import { ReportIssueButton } from "@/components/report-issue-button";
@@ -53,9 +55,16 @@ export async function generateMetadata({
   const event = await getViewableEvent(id);
   if (!event) return { title: "행사를 찾을 수 없습니다" };
   const where = `${districtLabel(event.district)} · ${event.venue}`;
+  const description = `${formatDateRange(event.startDate, event.endDate)} · ${where}`;
   return {
     title: event.title,
-    description: `${formatDateRange(event.startDate, event.endDate)} · ${where}`,
+    description,
+    openGraph: {
+      type: "article",
+      title: event.title,
+      description,
+      images: event.imageUrl ? [event.imageUrl] : undefined,
+    },
   };
 }
 
@@ -210,6 +219,10 @@ export default async function EventDetailPage({
           ) : null}
         </div>
       ) : null}
+
+      <Suspense fallback={null}>
+        <RelatedNews query={event.title} />
+      </Suspense>
     </div>
   );
 }

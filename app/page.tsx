@@ -74,7 +74,7 @@ export default async function DashboardPage() {
             인천의 모든 행사·축제를 한눈에!
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            행사 정보를 한 곳에서 확인하고 효율적으로 관리하세요.
+            인천에서 열리는 행사·축제·공연을 한 곳에서 확인하세요.
           </p>
         </div>
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">

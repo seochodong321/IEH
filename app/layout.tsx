@@ -4,6 +4,7 @@ import "./globals.css";
 import { MobileNav, Sidebar } from "@/components/sidebar";
 import { AdminEntry } from "@/components/admin-entry";
 import { Toaster } from "@/components/ui/sonner";
+import { siteUrl } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -15,14 +16,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const DESCRIPTION =
+  "인천에서 열리는 행사·축제·공연·박람회·체육행사를 한눈에 확인하세요.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   // 각 페이지는 title 문자열만 export 하면 "%s · 인천 행사 상황판" 으로 합쳐진다.
   title: {
     default: "인천 행사 상황판",
     template: "%s · 인천 행사 상황판",
   },
-  description:
-    "인천에서 열리는 행사·축제·공연·박람회·체육행사를 한눈에 확인하는 상황판",
+  description: DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: "인천 행사 상황판",
+    locale: "ko_KR",
+    title: "인천 행사 상황판",
+    description: DESCRIPTION,
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({
