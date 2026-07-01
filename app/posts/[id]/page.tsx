@@ -46,11 +46,11 @@ export default async function PostPage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <Link
-        href="/"
+        href="/posts"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
-        대시보드로
+        새소식으로
       </Link>
 
       <article className="space-y-4 rounded-xl bg-card p-6 ring-1 ring-foreground/10">
