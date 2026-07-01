@@ -220,9 +220,11 @@ export default async function EventDetailPage({
         </div>
       ) : null}
 
-      <Suspense fallback={null}>
-        <RelatedNews query={event.title} />
-      </Suspense>
+      {event.published ? (
+        <Suspense fallback={null}>
+          <RelatedNews query={event.title} />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

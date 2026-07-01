@@ -3,8 +3,20 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/lib/auth";
-import { createPost, deletePost, updatePost } from "@/lib/data/posts";
+import {
+  createPost,
+  deletePost,
+  getPostById,
+  updatePost,
+} from "@/lib/data/posts";
+import { deleteImage } from "@/lib/data/images";
 import type { PostInput } from "@/lib/types";
+
+// 본문에 붙여넣기한 업로드 이미지 URL(/api/images/{uuid})에서 id만 추출
+const IMG_ID_RE = /\/api\/images\/([0-9a-f-]{36})/gi;
+function uploadedImageIds(content: string): string[] {
+  return [...content.matchAll(IMG_ID_RE)].map((m) => m[1]);
+}
 
 export type PostFormState = { error?: string };
 
@@ -63,8 +75,13 @@ export async function updatePostAction(
 
 export async function deletePostAction(id: string): Promise<{ error?: string }> {
   await requireAuth();
+  const post = await getPostById(id);
   const ok = await deletePost(id);
   if (!ok) return { error: "게시물을 찾을 수 없습니다." };
+  // 본문에 붙여넣기한 업로드 이미지 정리 (고아 행 방지)
+  if (post) {
+    for (const imgId of uploadedImageIds(post.content)) await deleteImage(imgId);
+  }
   revalidate();
   return {};
 }

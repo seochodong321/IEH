@@ -22,8 +22,8 @@ export async function RelatedNews({ query }: { query: string }) {
         관련 기사
       </h2>
       <ul className="divide-y">
-        {items.map((n) => (
-          <li key={n.link}>
+        {items.map((n, i) => (
+          <li key={`${n.link}-${i}`}>
             <a
               href={n.link}
               target="_blank"
