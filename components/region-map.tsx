@@ -51,6 +51,8 @@ export function RegionMap({
         viewBox={`0 0 ${MAP_W} ${MAP_H}`}
         preserveAspectRatio="xMidYMid meet"
         className="absolute inset-0 size-full"
+        role="group"
+        aria-label="인천 권역별 행사 분포 — 권역을 선택하면 해당 행사를 볼 수 있습니다"
       >
         <defs>
           <filter id="bubbleShadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -71,6 +73,7 @@ export function RegionMap({
             <path
               key={s.value}
               d={s.d}
+              aria-hidden="true"
               className="cursor-pointer transition-[fill,stroke]"
               fill={on ? LAND_HOVER : LAND}
               stroke={on ? LAND_STROKE_HOVER : LAND_STROKE}
@@ -93,10 +96,21 @@ export function RegionMap({
           return (
             <g
               key={s.value + "-b"}
-              className="cursor-pointer"
+              role="button"
+              tabIndex={0}
+              aria-label={`${DISTRICT_MAP[s.value].label} ${count}건`}
+              className="cursor-pointer outline-none focus-visible:[outline:3px_solid_#2563eb] [outline-offset:2px]"
               onMouseEnter={() => setHovered(s.value)}
               onMouseLeave={() => setHovered(null)}
+              onFocus={() => setHovered(s.value)}
+              onBlur={() => setHovered(null)}
               onClick={() => handle(s.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handle(s.value);
+                }
+              }}
             >
               <circle
                 cx={cx}

@@ -48,11 +48,21 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-muted/40">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:shadow-lg"
+        >
+          본문 바로가기
+        </a>
         <div className="flex min-h-screen">
           <Sidebar />
           <div className="flex min-w-0 flex-1 flex-col">
             <MobileNav />
-            <main className="flex-1 px-4 py-6 md:px-8">
+            <main
+              id="main-content"
+              tabIndex={-1}
+              className="flex-1 px-4 py-6 focus:outline-none md:px-8"
+            >
               <div className="mx-auto w-full max-w-[1440px]">{children}</div>
             </main>
           </div>

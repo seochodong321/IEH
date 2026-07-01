@@ -70,6 +70,7 @@ function NavLinks({
           key={href}
           href={href}
           onClick={onNavigate}
+          aria-current={isActive(pathname, href) ? "page" : undefined}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
             isActive(pathname, href)
@@ -77,7 +78,7 @@ function NavLinks({
               : "text-slate-300 hover:bg-white/10 hover:text-white",
           )}
         >
-          <Icon className="size-[18px]" />
+          <Icon className="size-[18px]" aria-hidden="true" />
           {label}
         </Link>
       ))}
@@ -124,11 +125,16 @@ export function MobileNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // 드로어 열려 있을 때 뒤 배경 스크롤 잠금
+  // 드로어 열려 있을 때: 뒤 배경 스크롤 잠금 + Esc 로 닫기
   useEffect(() => {
     if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
+      document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
   }, [open]);
@@ -145,9 +151,10 @@ export function MobileNav() {
             type="button"
             onClick={() => setOpen(true)}
             aria-label="메뉴 열기"
+            aria-expanded={open}
             className="-mr-2 rounded-md p-2 text-slate-200 hover:bg-white/10"
           >
-            <Menu className="size-6" />
+            <Menu className="size-6" aria-hidden="true" />
           </button>
         </div>
       </header>
@@ -160,7 +167,12 @@ export function MobileNav() {
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-black/40"
           />
-          <div className="absolute inset-y-0 right-0 flex w-72 max-w-[85%] flex-col gap-6 overflow-y-auto bg-slate-900 p-4 shadow-xl">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="메뉴"
+            className="absolute inset-y-0 right-0 flex w-72 max-w-[85%] flex-col gap-6 overflow-y-auto bg-slate-900 p-4 shadow-xl"
+          >
             <div className="flex items-start justify-between gap-2">
               <Logo />
               <button
