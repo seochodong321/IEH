@@ -6,7 +6,13 @@ const URL_RE = /(https?:\/\/[^\s]+)/g;
 const BOLD_RE = /\*\*([^*\n]+)\*\*/g;
 const TRAIL_RE = /[.,;:!?)\]}]+$/;
 
-function linkify(text: string, keyPrefix: string): ReactNode[] {
+function linkify(
+  text: string,
+  keyPrefix: string,
+  disable: boolean,
+): ReactNode[] {
+  // 카드 프리뷰처럼 <Link>로 감싼 곳에선 <a> 중첩을 피하려고 링크를 끈다.
+  if (disable) return [<Fragment key={keyPrefix}>{text}</Fragment>];
   return text.split(URL_RE).map((part, i) => {
     const key = `${keyPrefix}-${i}`;
     if (!/^https?:\/\//.test(part)) return <Fragment key={key}>{part}</Fragment>;
@@ -31,9 +37,11 @@ function linkify(text: string, keyPrefix: string): ReactNode[] {
 export function RichText({
   text,
   className,
+  disableLinks = false,
 }: {
   text: string;
   className?: string;
+  disableLinks?: boolean;
 }) {
   const nodes: ReactNode[] = [];
   let last = 0;
@@ -41,11 +49,13 @@ export function RichText({
   const re = new RegExp(BOLD_RE);
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
-    if (m.index > last) nodes.push(...linkify(text.slice(last, m.index), `t${k++}`));
+    if (m.index > last)
+      nodes.push(...linkify(text.slice(last, m.index), `t${k++}`, disableLinks));
     nodes.push(<strong key={`b${k++}`}>{m[1]}</strong>);
     last = re.lastIndex;
   }
-  if (last < text.length) nodes.push(...linkify(text.slice(last), `t${k++}`));
+  if (last < text.length)
+    nodes.push(...linkify(text.slice(last), `t${k++}`, disableLinks));
 
   return <p className={className}>{nodes}</p>;
 }

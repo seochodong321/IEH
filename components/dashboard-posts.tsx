@@ -1,8 +1,9 @@
-import { ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { RichText } from "@/components/rich-text";
 import type { Post } from "@/lib/types";
 
-// 관리자가 올린 게시물을 대시보드 하단 '관련 게시물'로 노출.
+// 관리자가 올린 게시물을 대시보드 하단 '관련 게시물'로 노출. 카드 클릭 → 게시물 상세.
 export function DashboardPosts({ posts }: { posts: Post[] }) {
   if (posts.length === 0) return null;
 
@@ -11,9 +12,10 @@ export function DashboardPosts({ posts }: { posts: Post[] }) {
       <h2 className="mb-3 text-lg font-semibold">관련 게시물</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map((p) => (
-          <article
+          <Link
             key={p.id}
-            className="flex flex-col overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10"
+            href={`/posts/${p.id}`}
+            className="flex flex-col overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10 transition-colors hover:bg-muted/40"
           >
             {p.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -24,21 +26,15 @@ export function DashboardPosts({ posts }: { posts: Post[] }) {
               {p.content ? (
                 <RichText
                   text={p.content}
+                  disableLinks
                   className="line-clamp-4 text-sm leading-relaxed break-words whitespace-pre-wrap text-muted-foreground"
                 />
               ) : null}
-              {p.linkUrl ? (
-                <a
-                  href={p.linkUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-auto inline-flex items-center gap-1 pt-1 text-sm font-medium text-blue-600 hover:text-blue-700"
-                >
-                  자세히 보기 <ExternalLink className="size-3.5" />
-                </a>
-              ) : null}
+              <span className="mt-auto inline-flex items-center gap-1 pt-1 text-sm font-medium text-blue-600">
+                자세히 보기 <ArrowRight className="size-3.5" />
+              </span>
             </div>
-          </article>
+          </Link>
         ))}
       </div>
     </section>

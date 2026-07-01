@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllEvents } from "@/lib/data/events";
+import { getPosts } from "@/lib/data/posts";
 import { siteUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -17,13 +18,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: p === "" ? 1 : 0.7,
   }));
 
-  const events = await getAllEvents();
+  const [events, posts] = await Promise.all([getAllEvents(), getPosts()]);
   const eventEntries = events.map((e) => ({
     url: `${base}/events/${e.id}`,
     lastModified: new Date(e.updatedAt),
     changeFrequency: "weekly" as const,
     priority: 0.6,
   }));
+  const postEntries = posts.map((p) => ({
+    url: `${base}/posts/${p.id}`,
+    lastModified: new Date(p.updatedAt),
+    changeFrequency: "weekly" as const,
+    priority: 0.5,
+  }));
 
-  return [...staticEntries, ...eventEntries];
+  return [...staticEntries, ...eventEntries, ...postEntries];
 }
