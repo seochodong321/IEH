@@ -85,7 +85,7 @@ export default async function EventDetailPage({
           관리 화면에서 “승인”하면 공개됩니다.
         </div>
       ) : null}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <Link
           href="/events"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"

@@ -23,7 +23,7 @@ export default async function EventsPage({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-baseline justify-between gap-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h1 className="text-2xl font-semibold">행사 목록</h1>
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">총 {events.length}건</span>

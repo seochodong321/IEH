@@ -130,7 +130,7 @@ export function CalendarView({
                 type="button"
                 onClick={() => setSelected(key)}
                 className={cn(
-                  "flex min-h-[92px] flex-col gap-1 border-b border-r p-1.5 text-left transition-colors last:border-r-0 hover:bg-muted/50 [&:nth-child(7n)]:border-r-0",
+                  "flex min-h-14 flex-col gap-1 border-b border-r p-1 text-left transition-colors last:border-r-0 hover:bg-muted/50 sm:min-h-[92px] sm:p-1.5 [&:nth-child(7n)]:border-r-0",
                   !inMonth && "bg-muted/20 text-muted-foreground",
                   isSelected && "bg-primary/5 ring-1 ring-inset ring-primary/40",
                 )}
@@ -145,7 +145,35 @@ export function CalendarView({
                 >
                   {day.getDate()}
                 </span>
-                <div className={cn("space-y-0.5", !inMonth && "opacity-45")}>
+                {/* 모바일: 칸이 좁아 제목 대신 카테고리 색 점으로 표시 (탭하면 아래 목록) */}
+                <div
+                  className={cn(
+                    "flex flex-wrap items-center gap-0.5 px-0.5 sm:hidden",
+                    !inMonth && "opacity-45",
+                  )}
+                >
+                  {dayEvents.slice(0, 4).map((e) => (
+                    <span
+                      key={e.id}
+                      className={cn(
+                        "size-1.5 rounded-full",
+                        CATEGORY_MAP[e.category].dotClass,
+                      )}
+                    />
+                  ))}
+                  {dayEvents.length > 4 ? (
+                    <span className="text-[9px] leading-none text-muted-foreground">
+                      +{dayEvents.length - 4}
+                    </span>
+                  ) : null}
+                </div>
+                {/* sm 이상: 제목 칩 */}
+                <div
+                  className={cn(
+                    "hidden space-y-0.5 sm:block",
+                    !inMonth && "opacity-45",
+                  )}
+                >
                   {dayEvents.slice(0, 3).map((e) => (
                     <div
                       key={e.id}
