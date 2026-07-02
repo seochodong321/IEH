@@ -39,6 +39,19 @@ export function CalendarView({
     return eachDayOfInterval({ start: gridStart, end: gridEnd });
   }, [cursor]);
 
+  // 하루 칸 안에서는 기간이 짧은 행사부터 — 장기(상설) 행사가 매일
+  // 상단을 차지해 그날의 단기 행사를 가리지 않도록 한다.
+  const sorted = useMemo(() => {
+    const span = (e: EventSummary) =>
+      new Date(e.endDate).getTime() - new Date(e.startDate).getTime();
+    return [...events].sort(
+      (a, b) =>
+        span(a) - span(b) ||
+        a.startDate.localeCompare(b.startDate) ||
+        a.title.localeCompare(b.title),
+    );
+  }, [events]);
+
   // 각 날짜(YYYY-MM-DD)에 걸치는 행사 목록
   const byDay = useMemo(() => {
     const map = new Map<string, EventSummary[]>();
@@ -46,11 +59,11 @@ export function CalendarView({
       const key = format(day, "yyyy-MM-dd");
       map.set(
         key,
-        events.filter((e) => occursOn(e, key)),
+        sorted.filter((e) => occursOn(e, key)),
       );
     }
     return map;
-  }, [days, events]);
+  }, [days, sorted]);
 
   const monthLabel = `${cursor.getFullYear()}년 ${cursor.getMonth() + 1}월`;
   const currentMonth = cursor.getMonth();
@@ -65,7 +78,7 @@ export function CalendarView({
   };
 
   const selectedEvents =
-    byDay.get(selected) ?? events.filter((e) => occursOn(e, selected));
+    byDay.get(selected) ?? sorted.filter((e) => occursOn(e, selected));
 
   return (
     <div className="space-y-5">

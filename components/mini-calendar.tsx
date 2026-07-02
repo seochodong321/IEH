@@ -14,6 +14,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WEEKDAYS_KO } from "@/lib/constants";
 import { occursOn } from "@/lib/event-utils";
+import { regionTier } from "@/lib/region";
 import { cn } from "@/lib/utils";
 import type { EventSummary } from "@/lib/types";
 
@@ -132,7 +133,13 @@ export function MiniCalendar({
                 {day.getDate()}
               </span>
               {count > 0 ? (
-                <span className="rounded bg-blue-100 px-1 text-[10px] leading-tight font-medium text-blue-700">
+                // 지역 분포와 같은 색 단계(건수 많을수록 진하게)로 강조
+                <span
+                  className={cn(
+                    "rounded px-1 text-[10px] leading-tight font-medium text-white",
+                    regionTier(count).fill,
+                  )}
+                >
                   {count}건
                 </span>
               ) : null}
