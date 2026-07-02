@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, Newspaper } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { RichText } from "@/components/rich-text";
 import { formatDate } from "@/lib/event-utils";
 import type { Post } from "@/lib/types";
 
 // 게시물 카드 그리드 (대시보드 '새소식' + /posts 목록 공용). 카드 클릭 → 상세.
+// 이미지가 없는 게시물은 자리채움 블록 없이 텍스트 카드로 컴팩트하게 보여준다.
 export function PostGrid({ posts }: { posts: Post[] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -16,12 +17,8 @@ export function PostGrid({ posts }: { posts: Post[] }) {
         >
           {p.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={p.imageUrl} alt="" className="h-36 w-full object-cover" />
-          ) : (
-            <div className="flex h-36 w-full items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600">
-              <Newspaper className="size-10 text-white/50" />
-            </div>
-          )}
+            <img src={p.imageUrl} alt="" className="h-32 w-full object-cover" />
+          ) : null}
           <div className="flex flex-1 flex-col gap-1.5 p-4">
             <h3 className="font-semibold break-words group-hover:text-primary">
               {p.title}
