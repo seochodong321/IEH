@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Repeat, Star } from "lucide-react";
 import {
@@ -53,7 +54,14 @@ export function EventTable({ events }: { events: EventRecord[] }) {
               onClick={() => router.push(`/events/${e.id}`)}
             >
               <TableCell className="max-w-[240px] pl-4 font-medium">
-                <div className="truncate">{e.title}</div>
+                {/* 행 전체 onClick은 마우스 편의용 — 키보드/스크린리더는 이 링크로 진입 */}
+                <Link
+                  href={`/events/${e.id}`}
+                  onClick={(ev) => ev.stopPropagation()}
+                  className="block truncate hover:underline"
+                >
+                  {e.title}
+                </Link>
                 {recurrenceLabel(e) ? (
                   <div className="flex items-center gap-1 text-[11px] font-normal text-muted-foreground">
                     <Repeat className="size-3" />

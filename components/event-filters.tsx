@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -27,8 +27,6 @@ interface InitialFilters {
   includeEnded?: boolean;
   featured?: boolean;
 }
-
-let debounceTimer: ReturnType<typeof setTimeout>;
 
 const categoryItems = { all: "전체 유형", ...labelRecord(CATEGORIES) };
 const statusItems = { all: "전체 상태", ...labelRecord(STATUSES) };
@@ -65,10 +63,14 @@ export function EventFilters({
 
   const setParam = (key: string, value: string) => setParams({ [key]: value });
 
+  // 검색 디바운스 — 페이지 이탈 시 대기 중인 타이머를 정리해 뒤늦은 이동을 막는다
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(debounceRef.current), []);
+
   const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => setParam("q", value), 300);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setParam("q", value), 300);
   };
 
   const week = weekRange(today);
@@ -137,6 +139,7 @@ export function EventFilters({
             key={c.label}
             type="button"
             onClick={c.onClick}
+            aria-pressed={c.active}
             className={cn(
               "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
               c.active

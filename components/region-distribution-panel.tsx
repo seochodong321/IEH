@@ -18,6 +18,7 @@ export function RegionDistributionPanel({ events }: { events: EventSummary[] }) 
     <button
       type="button"
       onClick={() => setView(value)}
+      aria-pressed={view === value}
       className={cn(
         "flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors",
         view === value

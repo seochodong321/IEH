@@ -259,6 +259,8 @@ export function EventForm({
                     key={w}
                     type="button"
                     onClick={() => toggleDay(i)}
+                    aria-pressed={on}
+                    aria-label={`${w}요일`}
                     className={cn(
                       "size-9 rounded-md border text-sm font-medium transition-colors",
                       on

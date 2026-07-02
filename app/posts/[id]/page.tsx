@@ -10,7 +10,12 @@ import { formatDate } from "@/lib/event-utils";
 export const dynamic = "force-dynamic";
 
 function snippet(content: string): string {
-  return content.replace(/\*\*/g, "").replace(/\s+/g, " ").trim().slice(0, 120);
+  return content
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "") // 붙여넣은 이미지 토큰은 설명에서 제외
+    .replace(/\*\*/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
 }
 
 export async function generateMetadata({

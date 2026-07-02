@@ -117,6 +117,7 @@ export function AdminEventTable({ events }: { events: EventRecord[] }) {
               key={f.value}
               type="button"
               onClick={() => setPub(f.value)}
+              aria-pressed={pub === f.value}
               className={cn(
                 "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
                 pub === f.value
