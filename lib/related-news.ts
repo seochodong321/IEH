@@ -35,12 +35,29 @@ function pick(block: string, re: RegExp): string | undefined {
 }
 
 const LIMIT = 5;
+// 구글이 결과가 적으면 느슨하게 매칭된 기사로 채우므로, 후보를 넉넉히 받아
+// 행사명 키워드 필터를 통과한 것만 남긴다.
+const CANDIDATES = 12;
+
+// 행사명에서 관련성 판별용 키워드 추출 — 연도·숫자·'인천'처럼
+// 아무 기사에나 들어가는 토큰은 제외한다.
+function keywords(title: string): string[] {
+  return title
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(
+      (t) =>
+        t.length >= 2 && t !== "인천" && !/^\d+(년|월|일|회|주년)?$/.test(t),
+    );
+}
 
 async function fetchAndParse(query: string): Promise<NewsItem[]> {
   const q = query.trim();
   if (!q) return [];
+  // 행사명만으로 검색하면 무관한 기사가 섞인다 → 제목에 '인천'이 없으면
+  // 함께 검색해 지역 관련성을 높인다.
+  const terms = q.includes("인천") ? q : `${q} 인천`;
   const url = `https://news.google.com/rss/search?q=${encodeURIComponent(
-    q,
+    terms,
   )}&hl=ko&gl=KR&ceid=KR:ko`;
 
   let xml: string;
@@ -56,7 +73,7 @@ async function fetchAndParse(query: string): Promise<NewsItem[]> {
   const items: NewsItem[] = [];
   const itemRe = /<item>([\s\S]*?)<\/item>/g;
   let m: RegExpExecArray | null;
-  while ((m = itemRe.exec(xml)) !== null && items.length < LIMIT) {
+  while ((m = itemRe.exec(xml)) !== null && items.length < CANDIDATES) {
     const block = m[1];
     const title = pick(block, /<title>([\s\S]*?)<\/title>/);
     const link = pick(block, /<link>([\s\S]*?)<\/link>/);
@@ -70,7 +87,13 @@ async function fetchAndParse(query: string): Promise<NewsItem[]> {
         : title;
     items.push({ title: clean, link, source, pubDate });
   }
-  return items;
+
+  // 행사명 키워드가 기사 제목에 하나도 없으면 무관한 기사로 보고 제외
+  const keys = keywords(q);
+  const relevant = keys.length
+    ? items.filter((n) => keys.some((k) => n.title.includes(k)))
+    : items;
+  return relevant.slice(0, LIMIT);
 }
 
 // 결과(제목별)를 6시간 캐시. unstable_cache는 데이터 캐시라 페이지의 force-dynamic과
