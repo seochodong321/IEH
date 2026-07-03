@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { eq, inArray, sql } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/lib/db/client";
 import { events as eventsTable, type EventRow } from "@/lib/db/schema";
@@ -79,18 +80,26 @@ function inputToValues(input: EventInput) {
   };
 }
 
-// includeUnpublished=false(기본)면 게시된 행사만 반환 (공개 화면용).
-// 관리자 화면은 true로 호출해 대기 행사까지 포함한다.
-async function loadAll(includeUnpublished = false): Promise<EventRecord[]> {
-  let records: EventRecord[];
+/** 행사 데이터 캐시 태그 — 행사를 변경하는 액션은 revalidateTag(EVENTS_TAG) 필수 */
+export const EVENTS_TAG = "events";
+
+// 원본 조회 (캐시 없음, 대기 포함) — 관리자 화면·중복검사처럼 항상 최신이 필요한 곳용.
+async function queryAll(): Promise<EventRecord[]> {
   if (hasDatabase()) {
     const rows = await getDb().select().from(eventsTable);
-    records = rows.map(rowToRecord);
-  } else {
-    records = mem().map((e) => ({ ...e }));
+    return rows.map(rowToRecord);
   }
-  return includeUnpublished ? records : records.filter((e) => e.published);
+  return mem().map((e) => ({ ...e }));
 }
+
+// 공개 화면용 게시 행사 목록 — 태그 캐시로 매 요청 DB 조회를 피한다.
+// 행사 변경 액션이 revalidateTag(EVENTS_TAG)로 즉시 갱신하고,
+// revalidate(5분)는 그물망(외부에서 DB를 직접 고친 경우 등).
+const loadPublished = unstable_cache(
+  async () => (await queryAll()).filter((e) => e.published),
+  ["events-published"],
+  { revalidate: 300, tags: [EVENTS_TAG] },
+);
 
 // 검색/필터는 두 모드에서 동일하게 동작하도록 메모리에서 적용한다.
 // (내부 조회용 데이터 규모에서는 충분하며, 모드 간 동작 차이를 없앤다.)
@@ -150,22 +159,23 @@ function sortEvents(
 
 /** 게시된 전체 행사 (대시보드/캘린더 등 공개 화면) */
 export async function getAllEvents(): Promise<EventRecord[]> {
-  return loadAll();
+  return loadPublished();
 }
 
 /** 필터 적용 + 정렬 (공개 목록 페이지). 게시된 행사만 노출 */
 export async function getEvents(
   filters: EventFilters = {},
 ): Promise<EventRecord[]> {
-  const all = await loadAll();
+  // 캐시가 반환한 배열을 제자리 정렬로 오염시키지 않도록 복사한다
+  const all = [...(await loadPublished())];
   // 기준일은 요청당 한 번만 계산 (필터·정렬 전체가 같은 '오늘'을 공유)
   const today = todayKST();
   return sortEvents(applyFilters(all, filters, today), filters.sort, today);
 }
 
-/** 관리자용 전체 행사 (대기 포함). 대기 행사를 맨 위로, 그 다음 상태순 */
+/** 관리자용 전체 행사 (대기 포함, 캐시 없음). 대기 행사를 맨 위로, 그 다음 상태순 */
 export async function getAdminEvents(): Promise<EventRecord[]> {
-  const all = await loadAll(true);
+  const all = await queryAll();
   const today = todayKST();
   return all.sort((a, b) => {
     if (a.published !== b.published) return a.published ? 1 : -1; // 대기 먼저
@@ -218,7 +228,7 @@ export async function findDuplicateEvents(
 ): Promise<EventRecord[]> {
   const norm = title.trim().toLowerCase();
   if (!norm || !startDate) return [];
-  const all = await loadAll(true);
+  const all = await queryAll();
   return all.filter(
     (e) =>
       e.id !== excludeId &&

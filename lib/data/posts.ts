@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import { desc, eq } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/lib/db/client";
 import { posts as table, type PostRow } from "@/lib/db/schema";
@@ -21,16 +22,29 @@ function rowToRecord(r: PostRow): Post {
   };
 }
 
+/** 게시물 데이터 캐시 태그 — 게시물을 변경하는 액션은 revalidateTag(POSTS_TAG) 필수 */
+export const POSTS_TAG = "posts";
+
+// 최신순 전체 목록 — 태그 캐시 (게시물 수가 적어 목록 하나만 캐시하면 충분).
+// 변경 액션이 revalidateTag(POSTS_TAG)로 즉시 갱신, revalidate(5분)는 그물망.
+const loadPosts = unstable_cache(
+  async (): Promise<Post[]> => {
+    if (hasDatabase()) {
+      const rows = await getDb()
+        .select()
+        .from(table)
+        .orderBy(desc(table.createdAt));
+      return rows.map(rowToRecord);
+    }
+    return [...memory].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+  ["posts-list"],
+  { revalidate: 300, tags: [POSTS_TAG] },
+);
+
 /** 최신순 게시물. limit 지정 시 그만큼만 */
 export async function getPosts(limit?: number): Promise<Post[]> {
-  if (hasDatabase()) {
-    const q = getDb().select().from(table).orderBy(desc(table.createdAt));
-    const rows = await (limit ? q.limit(limit) : q);
-    return rows.map(rowToRecord);
-  }
-  const list = [...memory].sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt),
-  );
+  const list = await loadPosts();
   return limit ? list.slice(0, limit) : list;
 }
 

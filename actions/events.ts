@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import {
+  EVENTS_TAG,
   addLike,
   createEvent,
   deleteEvent,
@@ -145,6 +146,7 @@ function uploadedImageId(url: string | null | undefined): string | null {
 }
 
 function revalidateAll(id?: string) {
+  updateTag(EVENTS_TAG); // 공개 조회 캐시(loadPublished) 즉시 만료 → 바로 최신 반영
   revalidatePath("/");
   revalidatePath("/events");
   revalidatePath("/calendar");
@@ -218,6 +220,8 @@ export async function updateEventAction(
 }
 
 // 좋아요 토글 (공개 — 인증 불필요). 새 좋아요 수 반환.
+// EVENTS_TAG는 일부러 갱신하지 않는다 — 상세 페이지는 캐시를 안 타서 항상 최신이고,
+// 통계의 좋아요 순위가 최대 5분 늦는 대신 좋아요마다 캐시가 깨지는 걸 막는다.
 export async function toggleLikeAction(
   id: string,
   liked: boolean,

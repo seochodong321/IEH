@@ -1,9 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { requireAuth } from "@/lib/auth";
 import {
+  POSTS_TAG,
   createPost,
   deletePost,
   getPostById,
@@ -43,7 +44,9 @@ function parsePost(formData: FormData): PostInput | string {
 }
 
 function revalidate() {
-  revalidatePath("/"); // 대시보드 '관련 게시물'
+  updateTag(POSTS_TAG); // 공개 목록 캐시(loadPosts) 즉시 만료 → 바로 최신 반영
+  revalidatePath("/"); // 대시보드 '새소식'
+  revalidatePath("/posts");
   revalidatePath("/admin/posts");
 }
 
