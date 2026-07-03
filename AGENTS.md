@@ -15,7 +15,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **이미지는 별도 블롭 스토어 없음** — `images` 테이블(base64)에 저장하고 `/api/images/[id]`로 서빙. 이미지 관련은 이 패턴 재사용(S3 등 추가 금지).
 - **분류값: `category`·`district`는 text 컬럼**이고 앱의 `*_MAP`(lib/constants.ts)으로 검증 → 항목 추가/변경은 **코드 수정만, 마이그레이션 불필요**. `org_type`·`indoor_outdoor`만 enum.
 - **인증: 쿠키 세션**(`lib/auth.ts`), `ADMIN_PASSWORD`·`SESSION_SECRET` 환경변수(Vercel). 새 인증 라이브러리 붙이지 말 것.
-- **배포: Vercel, `main` 푸시 시 자동.** 푸시 전 `npx tsc --noEmit` + `npm run build` 통과 확인.
+- **배포: Vercel, `main` 푸시 시 자동.** 푸시 전 `npx tsc --noEmit` + `npm test`(vitest, 순수 로직) + `npm run build` 통과 확인.
 
 ## DB 스키마를 꼭 바꿔야 할 때만
 - 새 컬럼/타입 변경 SQL은 **Neon 콘솔(Open in Neon) → SQL Editor**에서 실행. (Vercel 대시보드의 Query 탭은 읽기 전용이라 DDL 불가)
