@@ -8,7 +8,6 @@ import {
   CalendarDays,
   LayoutGrid,
   ListChecks,
-  Landmark,
   MapPin,
   Megaphone,
   Menu,
@@ -41,9 +40,9 @@ function isActive(pathname: string, href: string) {
 function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2.5">
-      <span className="flex size-9 items-center justify-center rounded-lg bg-blue-600/90 text-white">
-        <Landmark className="size-5" />
-      </span>
+      {/* 파비콘(app/icon.svg)과 같은 '인천 축제의 밤' 아이덴티티를 재사용 */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/icon.svg" alt="" className="size-9 shrink-0" />
       <span className="leading-tight">
         <span className="block text-sm font-semibold text-white">
           인천 행사·축제 통합 현황판
@@ -144,7 +143,8 @@ export function MobileNav() {
       <header className="sticky top-0 z-30 border-b bg-slate-900 md:hidden">
         <div className="flex h-14 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2 text-white">
-            <Landmark className="size-5 text-blue-400" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon.svg" alt="" className="size-6" />
             <span className="text-sm font-semibold">인천 행사 상황판</span>
           </Link>
           <button
