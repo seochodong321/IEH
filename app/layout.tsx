@@ -33,6 +33,7 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     title: "인천 행사 상황판",
     description: DESCRIPTION,
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "인천 행사 상황판" }],
   },
   twitter: { card: "summary_large_image" },
 };

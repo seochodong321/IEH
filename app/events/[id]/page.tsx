@@ -63,7 +63,8 @@ export async function generateMetadata({
       type: "article",
       title: event.title,
       description,
-      images: event.imageUrl ? [event.imageUrl] : undefined,
+      // 대표 이미지가 없으면 사이트 공용 OG 이미지로 (카톡 등 공유 썸네일)
+      images: [event.imageUrl ?? "/og.png"],
     },
   };
 }
