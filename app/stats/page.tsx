@@ -11,7 +11,12 @@ import { RegionBars } from "@/components/region-bars";
 import { Panel } from "@/components/panel";
 import { CategoryBadge } from "@/components/event-badges";
 import { getAllEvents } from "@/lib/data/events";
-import { computeStatus, todayKST } from "@/lib/event-utils";
+import {
+  computeStatus,
+  monthRange,
+  occursInRange,
+  todayKST,
+} from "@/lib/event-utils";
 import { districtCounts } from "@/lib/region";
 import { CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -42,14 +47,18 @@ export default async function StatsPage() {
   })).sort((a, b) => b.count - a.count);
   const catMax = Math.max(1, ...catCounts.map((c) => c.count));
 
-  const months = Array.from({ length: 12 }, (_, i) => ({
-    m: i + 1,
-    count: events.filter(
-      (e) =>
-        Number(e.startDate.slice(0, 4)) === year &&
-        Number(e.startDate.slice(5, 7)) === i + 1,
-    ).length,
-  }));
+  // 각 달에 실제로 "진행되는" 행사 수 (반복 요일 고려).
+  // 시작월 기준이 아니라 진행 기준이라, 작년에 시작해 올해까지 이어지는
+  // 행사도 걸친 달마다 집계된다.
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const months = Array.from({ length: 12 }, (_, i) => {
+    const range = monthRange(`${year}-${pad(i + 1)}-01`);
+    return {
+      m: i + 1,
+      count: events.filter((e) => occursInRange(e, range.start, range.end))
+        .length,
+    };
+  });
   const monthMax = Math.max(1, ...months.map((m) => m.count));
 
   const topLiked = [...events]
@@ -122,7 +131,7 @@ export default async function StatsPage() {
         </Panel>
       </section>
 
-      <Panel title={`월별 행사 (${year}년 · 시작월 기준)`}>
+      <Panel title={`월별 행사 (${year}년 · 진행 기준)`}>
         <div className="flex h-44 gap-1.5">
           {months.map((m) => {
             const isCur = m.m === curMonth;
@@ -156,8 +165,8 @@ export default async function StatsPage() {
           })}
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          막대가 비어 있는 달은 해당 월에 <b>시작하는</b> 행사가 없다는
-          뜻입니다. (여러 달에 걸친 행사는 시작월에만 집계)
+          해당 월에 <b>진행되는</b> 행사 수입니다. 여러 달에 걸친 행사는 걸친
+          달마다, 매주 반복 행사는 해당 요일이 있는 달만 집계됩니다.
         </p>
       </Panel>
 

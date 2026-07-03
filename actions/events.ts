@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath, revalidateTag, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import {
@@ -220,14 +220,16 @@ export async function updateEventAction(
 }
 
 // 좋아요 토글 (공개 — 인증 불필요). 새 좋아요 수 반환.
-// EVENTS_TAG는 일부러 갱신하지 않는다 — 상세 페이지는 캐시를 안 타서 항상 최신이고,
-// 통계의 좋아요 순위가 최대 5분 늦는 대신 좋아요마다 캐시가 깨지는 걸 막는다.
+// 캐시는 SWR("max")로만 표시 — 통계 '인기 행사'가 다음 방문 때 갱신된다.
+// (updateTag처럼 즉시 만료시키면 좋아요마다 공개 캐시가 통째로 깨져서 안 씀.
+//  상세 페이지는 캐시를 안 타므로 좋아요 수 자체는 항상 최신.)
 export async function toggleLikeAction(
   id: string,
   liked: boolean,
 ): Promise<{ count?: number; error?: string }> {
   const count = await addLike(id, liked ? 1 : -1);
   if (count === null) return { error: "행사를 찾을 수 없습니다." };
+  revalidateTag(EVENTS_TAG, "max");
   revalidatePath(`/events/${id}`);
   return { count };
 }
