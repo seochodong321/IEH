@@ -5,10 +5,10 @@ import {
   CalendarCheck,
   CalendarDays,
   CalendarRange,
-  RefreshCw,
   Star,
 } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
+import { DashboardHero } from "@/components/dashboard-hero";
 import { FeaturedEventItem } from "@/components/featured-event-item";
 import { MiniCalendar } from "@/components/mini-calendar";
 import { RegionDistributionPanel } from "@/components/region-distribution-panel";
@@ -69,21 +69,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* 히어로 헤더 */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            인천의 모든 행사·축제를 한눈에!
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            인천에서 열리는 행사·축제·공연을 한 곳에서 확인하세요.
-          </p>
-        </div>
-        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <RefreshCw className="size-3.5" />
-          최종 업데이트: {lastUpdated}
-        </p>
-      </div>
+      {/* 히어로 헤더 — '인천 축제의 밤' 아이덴티티 밴드 */}
+      <DashboardHero lastUpdated={lastUpdated} />
 
       {/* 통계 카드 */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
